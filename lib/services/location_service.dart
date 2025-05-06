@@ -1,114 +1,125 @@
-// services/location_service.dart
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
-class LocationData {
-  final double latitude;
-  final double longitude;
-  final String cityName;
+class LocationService {
+  static const String _cachedLocationKey = 'cached_location';
+  static const String _cachedCityKey = 'cached_city';
 
-  LocationData({
-    required this.latitude,
-    required this.longitude,
-    required this.cityName,
-  });
+  // Cache location data
+  Future<void> cacheLocation(double latitude, double longitude, String city) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('${_cachedLocationKey}_lat', latitude);
+    await prefs.setDouble('${_cachedLocationKey}_lng', longitude);
+    await prefs.setString(_cachedCityKey, city);
+  }
 
-  @override
-  String toString() => cityName;
-}
+  // Get cached location
+  Future<Map<String, dynamic>?> getCachedLocation() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lat = prefs.getDouble('${_cachedLocationKey}_lat');
+    final lng = prefs.getDouble('${_cachedLocationKey}_lng');
+    final city = prefs.getString(_cachedCityKey);
 
-class LocationService extends ChangeNotifier {
-  LocationData? _currentLocation;
-  bool _isLoading = false;
-  String? _errorMessage;
-
-  LocationData? get currentLocation => _currentLocation;
-  bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
-
-  // Initialize location service
-  Future<void> init() async {
-    try {
-      await getCurrentLocation();
-    } catch (e) {
-      _errorMessage = 'Could not initialize location service';
-      notifyListeners();
+    if (lat != null && lng != null && city != null) {
+      return {
+        'latitude': lat,
+        'longitude': lng,
+        'city': city,
+      };
     }
+    return null;
   }
 
   // Get current location
-  Future<void> getCurrentLocation() async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
+  Future<Map<String, dynamic>> getCurrentLocation() async {
+    // Check for cached location first
+    final cachedLocation = await getCachedLocation();
+    if (cachedLocation != null) {
+      return cachedLocation;
+    }
 
-    try {
-      // Check if location services are enabled
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        _errorMessage = 'Location services are disabled';
-        _isLoading = false;
-        notifyListeners();
-        return;
-      }
-
-      // Check for location permission
-      LocationPermission permission = await Geolocator.checkPermission();
+    // Request permission
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          _errorMessage = 'Location permissions are denied';
-          _isLoading = false;
-          notifyListeners();
-          return;
+        throw Exception('Location permission denied');
+      }
+    }
+    
+    if (permission == LocationPermission.deniedForever) {
+      throw Exception('Location permission permanently denied');
+    }
+
+    // Get current position
+    final position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    // Get address from coordinates
+    final placemarks = await placemarkFromCoordinates(
+      position.latitude,
+      position.longitude,
+    );
+
+    final city = placemarks.first.locality ?? 'Unknown';
+    
+    // Cache the location
+    await cacheLocation(position.latitude, position.longitude, city);
+    
+    return {
+      'latitude': position.latitude,
+      'longitude': position.longitude,
+      'city': city,
+    };
+  }
+
+  // Get sunrise and sunset times for a given location and date
+  Future<Map<String, DateTime>> getSunriseSunset(
+    double latitude,
+    double longitude,
+    DateTime date,
+  ) async {
+    final formattedDate = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+    
+    final url = 'https://api.sunrise-sunset.org/json?lat=$latitude&lng=$longitude&date=$formattedDate&formatted=0';
+    
+    try {
+      final response = await http.get(Uri.parse(url));
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        
+        if (data['status'] == 'OK') {
+          final results = data['results'];
+          
+          final sunrise = DateTime.parse(results['sunrise']).toLocal();
+          final sunset = DateTime.parse(results['sunset']).toLocal();
+          
+          return {
+            'sunrise': sunrise,
+            'sunset': sunset,
+          };
         }
       }
       
-      if (permission == LocationPermission.deniedForever) {
-        _errorMessage = 'Location permissions are permanently denied';
-        _isLoading = false;
-        notifyListeners();
-        return;
-      }
-
-      // Get current position
-      Position position = await Geolocator.getCurrentPosition();
-      
-      // Get address from coordinates
-      List<Placemark> placemarks = await placemarkFromCoordinates(
-        position.latitude, 
-        position.longitude
-      );
-      
-      String cityName = 'Unknown Location';
-      if (placemarks.isNotEmpty) {
-        Placemark place = placemarks.first;
-        cityName = place.locality ?? place.subAdministrativeArea ?? 'Unknown Location';
-      }
-      
-      _currentLocation = LocationData(
-        latitude: position.latitude,
-        longitude: position.longitude,
-        cityName: cityName,
-      );
-      
-      _isLoading = false;
-      notifyListeners();
+      throw Exception('Failed to fetch sunrise/sunset data');
     } catch (e) {
-      _errorMessage = 'Error getting location: $e';
-      _isLoading = false;
-      notifyListeners();
+      debugPrint('Error fetching sunrise/sunset: $e');
+      
+      // Fallback to approximation if API fails
+      final baseDate = DateTime(date.year, date.month, date.day);
+      final sunrise = baseDate.add(const Duration(hours: 6)); // 6:00 AM
+      final sunset = baseDate.add(const Duration(hours: 18)); // 6:00 PM
+      
+      return {
+        'sunrise': sunrise,
+        'sunset': sunset,
+      };
     }
-  }
-
-  // Set location manually
-  void setLocation(double latitude, double longitude, String cityName) {
-    _currentLocation = LocationData(
-      latitude: latitude,
-      longitude: longitude,
-      cityName: cityName,
-    );
-    notifyListeners();
   }
 }

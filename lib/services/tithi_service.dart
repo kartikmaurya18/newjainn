@@ -1,214 +1,147 @@
-// services/tithi_service.dart
-import 'dart:convert';
 import 'package:flutter/material.dart';
-// ignore: depend_on_referenced_packages, unused_import
-import 'package:http/http.dart' as http;
+import 'package:jain_calendar/models/timing_model.dart';
+import 'package:jain_calendar/models/tithi_model.dart';
+import 'package:jain_calendar/services/location_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/tithi_model.dart';
-import '../models/timming_model.dart';
+import 'dart:convert';
 
-class TithiService extends ChangeNotifier {
-  final Map<String, TithiModel> _tithiCache = {};
-  bool _isLoading = false;
-  String? _errorMessage;
-
-  bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
-
-  // Get a list of tithis for the given month
-  Future<List<TithiModel>> getTithisForMonth(int year, int month, double latitude, double longitude) async {
-    List<TithiModel> monthTithis = [];
-    
-    // Get number of days in the month
-    final daysInMonth = DateTime(year, month + 1, 0).day;
-    
-    for (int day = 1; day <= daysInMonth; day++) {
-      final date = DateTime(year, month, day);
-      final dateKey = _getDateKey(date, latitude, longitude);
-      
-      if (_tithiCache.containsKey(dateKey)) {
-        monthTithis.add(_tithiCache[dateKey]!);
-      } else {
-        try {
-          final tithi = await _fetchTithiForDate(date, latitude, longitude);
-          _tithiCache[dateKey] = tithi;
-          monthTithis.add(tithi);
-        } catch (e) {
-          // Use a placeholder for failed fetches
-          monthTithis.add(_createPlaceholderTithi(date));
-        }
-      }
-    }
-    
-    return monthTithis;
-  }
-
-  // Get tithi for specific date
-  Future<TithiModel> getTithiForDate(DateTime date, double latitude, double longitude) async {
-    final dateKey = _getDateKey(date, latitude, longitude);
-    
-    if (_tithiCache.containsKey(dateKey)) {
-      return _tithiCache[dateKey]!;
-    }
-    
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-    
+class TithiService {
+  final LocationService _locationService = LocationService();
+  static const String _tithiCacheKey = 'tithi_cache_';
+  static const Duration _cacheExpiration = Duration(hours: 24);
+  
+  // Get tithi for a given date with caching
+  Future<TithiModel> getTithiForDate(DateTime date) async {
     try {
-      final tithi = await _fetchTithiForDate(date, latitude, longitude);
-      _tithiCache[dateKey] = tithi;
-      _isLoading = false;
-      notifyListeners();
+      final prefs = await SharedPreferences.getInstance();
+      final cacheKey = '$_tithiCacheKey${date.year}_${date.month}_${date.day}';
+      
+      // Check cache
+      final cachedData = prefs.getString(cacheKey);
+      if (cachedData != null) {
+        final data = json.decode(cachedData);
+        return TithiModel(
+          tithiNumber: data['tithiNumber'],
+          tithiName: data['tithiName'],
+          paksha: data['paksha'],
+          isSpecial: data['isSpecial'],
+        );
+      }
+
+      // Calculate new tithi
+      final tithi = TithiModel.fromDate(date);
+      
+      // Cache the result
+      await prefs.setString(cacheKey, json.encode({
+        'tithiNumber': tithi.tithiNumber,
+        'tithiName': tithi.tithiName,
+        'paksha': tithi.paksha,
+        'isSpecial': tithi.isSpecial,
+      }));
+      
       return tithi;
     } catch (e) {
-      _errorMessage = 'Error fetching tithi data: $e';
-      _isLoading = false;
-      notifyListeners();
-      return _createPlaceholderTithi(date);
+      debugPrint('Error getting tithi: $e');
+      // Return a default tithi in case of error
+      return const TithiModel(
+        tithiNumber: 1,
+        tithiName: 'Unknown',
+        paksha: 'Shukla',
+        isSpecial: false,
+      );
     }
   }
   
-  // Get timings based on a tithi
-  TimingModel getTimingsFromTithi(TithiModel tithi) {
-    return TimingModel.calculate(
-      tithi.sunrise,
-      tithi.sunset,
-      tithi.name,
-    );
+  // Get timings for a given date with improved error handling
+  Future<TimingModel> getTimingsForDate(DateTime date) async {
+    try {
+      // Get the user's location
+      final location = await _locationService.getCurrentLocation();
+      
+      // Get sunrise and sunset times for the location and date
+      final sunData = await _locationService.getSunriseSunset(
+        location['latitude'],
+        location['longitude'],
+        date,
+      );
+      
+      // Get tithi for the date
+      final tithi = await getTithiForDate(date);
+      
+      // Calculate all timings based on sunrise and sunset
+      return TimingModel.calculate(
+        sunData['sunrise']!,
+        sunData['sunset']!,
+        tithi.toString(),
+      );
+    } catch (e) {
+      debugPrint('Error getting timings: $e');
+      // Fallback to approximation if any step fails
+      final baseDate = DateTime(date.year, date.month, date.day);
+      final sunrise = baseDate.add(const Duration(hours: 6)); // 6:00 AM
+      final sunset = baseDate.add(const Duration(hours: 18)); // 6:00 PM
+      
+      final tithi = await getTithiForDate(date);
+      
+      return TimingModel.calculate(
+        sunrise,
+        sunset,
+        tithi.toString(),
+      );
+    }
   }
-
-  // Generate a key for caching
-  String _getDateKey(DateTime date, double latitude, double longitude) {
-    return '${date.year}-${date.month}-${date.day}_${latitude.toStringAsFixed(4)}_${longitude.toStringAsFixed(4)}';
-  }
-
-  // Fetch tithi data from API
-  Future<TithiModel> _fetchTithiForDate(DateTime date, double latitude, double longitude) async {
-    // First check cache in SharedPreferences
+  
+  // Get tithi and timing data for an entire month with caching
+  Future<Map<DateTime, TithiModel>> getTithisForMonth(DateTime month) async {
+    final Map<DateTime, TithiModel> tithis = {};
     final prefs = await SharedPreferences.getInstance();
-    final cacheKey = _getDateKey(date, latitude, longitude);
-    final cachedData = prefs.getString(cacheKey);
+    final monthCacheKey = '${_tithiCacheKey}month_${month.year}_${month.month}';
     
-    if (cachedData != null) {
-      final Map<String, dynamic> json = jsonDecode(cachedData);
-      return TithiModel.fromJson(json, date);
-    }
-    
-    // If not in cache, fetch from API
-    // In a real app, this would call an actual API like Sunrise-Sunset API 
-    // and a Tithi API like Drik Panchang
-    // For this sample, we'll generate some mock data
-    
-    // Simulate API response time
-    await Future.delayed(const Duration(milliseconds: 300));
-    
-    // Generate mock sunrise/sunset times based on date and location
-    final baseHour = (latitude / 10).round() % 6 + 5; // Between 5am and 11am
-    final sunriseTime = DateTime(
-      date.year, 
-      date.month, 
-      date.day, 
-      baseHour, 
-      ((longitude % 60) * 0.5).round()
-    );
-    
-    final sunsetTime = DateTime(
-      date.year, 
-      date.month, 
-      date.day, 
-      baseHour + 12, 
-      ((longitude % 60) * 0.5).round()
-    );
-    
-    // Generate a mock tithi name based on the date
-    final tithiDay = ((date.day + date.month) % 30) + 1;
-    final paksha = tithiDay <= 15 ? 'Shukla' : 'Krishna';
-    final tithiNum = tithiDay <= 15 ? tithiDay : tithiDay - 15;
-    final tithiName = '$paksha ${_getTithiName(tithiNum)}';
-    
-    // Determine if it's an auspicious day (simplified logic for demo)
-    final isShubh = date.weekday != DateTime.sunday && 
-                    date.weekday != DateTime.tuesday &&
-                    tithiNum != 4 &&
-                    tithiNum != 9 &&
-                    tithiNum != 14;
-    
-    final tithiData = {
-      'tithi': tithiName,
-      'isShubh': isShubh,
-      'sunrise': sunriseTime.toIso8601String(),
-      'sunset': sunsetTime.toIso8601String(),
-    };
-    
-    // Cache this result
-    await prefs.setString(cacheKey, jsonEncode(tithiData));
-    
-    return TithiModel.fromJson(tithiData, date);
-  }
-  
-  // Create a placeholder tithi for failed API calls
-  TithiModel _createPlaceholderTithi(DateTime date) {
-    
-    return TithiModel(
-      name: 'Unknown',
-      isShubh: false,
-      date: date,
-      sunrise: DateTime(date.year, date.month, date.day, 6, 0),
-      sunset: DateTime(date.year, date.month, date.day, 18, 0),
-    );
-  }
-  
-  // Convert tithi number to name
-  String _getTithiName(int tithiNum) {
-    const tithiNames = [
-      'Pratipada',   // 1
-      'Dwitiya',     // 2
-      'Tritiya',     // 3
-      'Chaturthi',   // 4
-      'Panchami',    // 5
-      'Shashthi',    // 6
-      'Saptami',     // 7
-      'Ashtami',     // 8
-      'Navami',      // 9
-      'Dashami',     // 10
-      'Ekadashi',    // 11
-      'Dwadashi',    // 12
-      'Trayodashi',  // 13
-      'Chaturdashi', // 14
-      'Purnima',     // 15 for Shukla
-    ];
-    
-    if (tithiNum == 0 || tithiNum > 15) return 'Amavasya'; // 15 for Krishna
-    return tithiNames[tithiNum - 1];
-  }
-  
-  // Clear cache if it gets too large
-  Future<void> clearOldCache() async {
-    if (_tithiCache.length > 100) {
-      final now = DateTime.now();
-      final keysToRemove = _tithiCache.keys.where((key) {
-        final parts = key.split('_');
-        final dateParts = parts[0].split('-');
-        final date = DateTime(
-          int.parse(dateParts[0]),
-          int.parse(dateParts[1]),
-          int.parse(dateParts[2]),
-        );
-        
-        // Remove items older than 30 days
-        return now.difference(date).inDays > 30;
-      }).toList();
+    try {
+      // Check cache first
+      final cachedData = prefs.getString(monthCacheKey);
+      if (cachedData != null) {
+        final data = json.decode(cachedData) as Map<String, dynamic>;
+        for (var entry in data.entries) {
+          final date = DateTime.parse(entry.key);
+          final tithiData = entry.value as Map<String, dynamic>;
+          tithis[date] = TithiModel(
+            tithiNumber: tithiData['tithiNumber'],
+            tithiName: tithiData['tithiName'],
+            paksha: tithiData['paksha'],
+            isSpecial: tithiData['isSpecial'],
+          );
+        }
+        return tithis;
+      }
+
+      // Calculate tithis for the month
+      final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
       
-      for (final key in keysToRemove) {
-        _tithiCache.remove(key);
+      for (int day = 1; day <= daysInMonth; day++) {
+        final date = DateTime(month.year, month.month, day);
+        final tithi = await getTithiForDate(date);
+        tithis[date] = tithi;
       }
       
-      // Also clear SharedPreferences cache
-      final prefs = await SharedPreferences.getInstance();
-      for (final key in keysToRemove) {
-        prefs.remove(key);
-      }
+      // Cache the results
+      final cacheData = tithis.map((key, value) => MapEntry(
+        key.toIso8601String(),
+        {
+          'tithiNumber': value.tithiNumber,
+          'tithiName': value.tithiName,
+          'paksha': value.paksha,
+          'isSpecial': value.isSpecial,
+        },
+      ));
+      
+      await prefs.setString(monthCacheKey, json.encode(cacheData));
+      
+      return tithis;
+    } catch (e) {
+      debugPrint('Error getting month tithis: $e');
+      // Return empty map in case of error
+      return {};
     }
   }
 }

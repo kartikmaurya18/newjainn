@@ -1,37 +1,30 @@
-name: tithi_calendar
-description: A Flutter calendar app for ritual timings and tithi calculations
+name: jain_tithi_fixed
+description: A Jain calendar app with ritual timings.
 publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.5
-  table_calendar: ^3.0.9
-  geolocator: ^10.0.0
+  cupertino_icons: ^1.0.6
   geocoding: ^2.1.1
+  geolocator: ^10.1.0
+  http: ^1.1.0
   intl: ^0.18.1
-  flutter_screenutil: ^5.8.4
   provider: ^6.0.5
-  shared_preferences: ^2.2.0
-  flutter_local_notifications: ^15.1.0
-  hive: ^2.2.3
-  hive_flutter: ^1.1.0
+  shared_preferences: ^2.2.2
+  table_calendar: ^3.0.9
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.2
-  hive_generator: ^2.0.0
-  build_runner: ^2.4.6
+  flutter_lints: ^3.0.1
 
 flutter:
   uses-material-design: true
-  assets:
-    - assets/images/
   fonts:
     - family: Poppins
       fonts:

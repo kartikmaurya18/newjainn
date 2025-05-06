@@ -1,57 +1,63 @@
-// models/timing_model.dart
-class TimingModel {
-  final DateTime sunrise;
-  final DateTime sunset;
-  final DateTime navkarshi;
-  final DateTime porsi;
-  final DateTime sadhPorsi;
-  final DateTime purimaddha;
-  final DateTime avaddha;
-  final String tithi;
+class TithiModel {
+  final int tithiNumber;
+  final String tithiName;
+  final String paksha; // Shukla (Bright) or Krishna (Dark)
+  final bool isSpecial; // For special tithis like Ashtami, Chaturdashi, etc.
 
-  TimingModel({
-    required this.sunrise,
-    required this.sunset,
-    required this.navkarshi,
-    required this.porsi,
-    required this.sadhPorsi,
-    required this.purimaddha,
-    required this.avaddha,
-    required this.tithi,
+  TithiModel({
+    required this.tithiNumber,
+    required this.tithiName,
+    required this.paksha,
+    this.isSpecial = false,
   });
 
-  // Factory method to calculate all timings based on sunrise/sunset
-  factory TimingModel.calculate(DateTime sunrise, DateTime sunset, String tithi) {
-    // Calculate the total daytime duration
-    final int daytimeMinutes = sunset.difference(sunrise).inMinutes;
-    
-    // Each prahar is 1/4 of total daytime
-    final int praharMinutes = daytimeMinutes ~/ 4;
-    
-    // Navkarshi is 48 minutes after sunrise
-    final navkarshi = sunrise.add(const Duration(minutes: 48));
-    
-    // Porsi is first prahar after sunrise
-    final porsi = sunrise.add(Duration(minutes: praharMinutes));
-    
-    // Sadh Porsi is 1.5 prahars after sunrise
-    final sadhPorsi = sunrise.add(Duration(minutes: (praharMinutes * 1.5).round()));
-    
-    // Purimaddha is midday (halfway between sunrise and sunset)
-    final purimaddha = sunrise.add(Duration(minutes: daytimeMinutes ~/ 2));
-    
-    // Avaddha is in the last quarter of the day
-    final avaddha = sunrise.add(Duration(minutes: daytimeMinutes - (daytimeMinutes ~/ 4)));
+  // Tithi names in Sanskrit
+  static final List<String> tithiNames = [
+    'Pratipada',
+    'Dwitiya',
+    'Tritiya',
+    'Chaturthi',
+    'Panchami',
+    'Shashti',
+    'Saptami',
+    'Ashtami',
+    'Navami',
+    'Dashami',
+    'Ekadashi',
+    'Dwadashi',
+    'Trayodashi',
+    'Chaturdashi',
+    'Purnima/Amavasya', // Will be either Purnima or Amavasya based on paksha
+  ];
 
-    return TimingModel(
-      sunrise: sunrise,
-      sunset: sunset,
-      navkarshi: navkarshi,
-      porsi: porsi,
-      sadhPorsi: sadhPorsi,
-      purimaddha: purimaddha,
-      avaddha: avaddha,
-      tithi: tithi,
+  // Factory method to create tithi from date (simplified calculation for demo)
+  // In a real app, this would use proper astronomical calculations
+  factory TithiModel.fromDate(DateTime date) {
+    // This is a simplified calculation for demonstration
+    // A real implementation would use proper astronomical algorithms
+    final int lunarDay = ((date.day + date.month) % 30) + 1;
+    final bool isShukla = lunarDay <= 15;
+    final int tithiNum = isShukla ? lunarDay : lunarDay - 15;
+    
+    String tithiName = tithiNames[tithiNum - 1];
+    // Handle special case for 15th tithi
+    if (tithiNum == 15) {
+      tithiName = isShukla ? 'Purnima' : 'Amavasya';
+    }
+    
+    // Some tithis are considered special in Jain tradition
+    bool isSpecial = [8, 11, 14, 15].contains(tithiNum);
+    
+    return TithiModel(
+      tithiNumber: tithiNum,
+      tithiName: tithiName,
+      paksha: isShukla ? 'Shukla' : 'Krishna',
+      isSpecial: isSpecial,
     );
+  }
+
+  @override
+  String toString() {
+    return '$tithiName ($paksha Paksha)';
   }
 }

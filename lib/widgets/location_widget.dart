@@ -1,89 +1,117 @@
-// widgets/location_widget.dart
 import 'package:flutter/material.dart';
-import '../services/location_service.dart';
-import '../utils/responsive_utils.dart';
+import 'package:jain_calendar/services/location_service.dart';
+import 'package:jain_tithi_fixed/themes/app_theme.dart';
 
-class LocationWidget extends StatelessWidget {
-  final LocationService locationService;
-  final VoidCallback onRefresh;
+class LocationWidget extends StatefulWidget {
+  final Function(Map<String, dynamic>)? onLocationChanged;
 
   const LocationWidget({
-    super.key,
-    required this.locationService,
-    required this.onRefresh,
-  });
+    Key? key,
+    this.onLocationChanged,
+  }) : super(key: key);
+
+  @override
+  State<LocationWidget> createState() => _LocationWidgetState();
+}
+
+class _LocationWidgetState extends State<LocationWidget> {
+  final LocationService _locationService = LocationService();
+  bool _isLoading = true;
+  String _locationName = 'Loading location...';
+  Map<String, dynamic>? _locationData;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocation();
+  }
+
+  Future<void> _loadLocation() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Try to get cached location first
+      Map<String, dynamic>? location = await _locationService.getCachedLocation();
+      
+      // If no cached location, get current location
+      if (location == null) {
+        location = await _locationService.getCurrentLocation();
+      }
+      
+      setState(() {
+        _locationName = location['city'];
+        _locationData = location;
+        _isLoading = false;
+      });
+      
+      if (widget.onLocationChanged != null) {
+        widget.onLocationChanged!(location);
+      }
+    } catch (e) {
+      setState(() {
+        _locationName = 'Location unavailable';
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      margin: EdgeInsets.all(ResponsiveUtils.value(
-        context,
-        mobile: 8,
-        tablet: 16,
-      )),
-      shape: RoundedRectangleBorder(
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.cardColor,
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: EdgeInsets.all(ResponsiveUtils.value(
-          context,
-          mobile: 12,
-          tablet: 16,
-        )),
-        child: Row(
-          children: [
-            const Icon(Icons.location_on, size: 24),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Current Location',
-                    style: TextStyle(
-                      fontSize: ResponsiveUtils.fontSize(context, base: 12),
-                      fontWeight: FontWeight.w500,
-                      color: Theme.of(context).textTheme.bodySmall?.color,
-                    ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.location_on_rounded,
+            color: AppTheme.primaryColor,
+            size: 24,
+          ),
+          const SizedBox(width: 8),
+          _isLoading
+              ? const SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppTheme.primaryColor,
                   ),
-                  const SizedBox(height: 2),
-                  if (locationService.isLoading)
-                    const Text('Detecting location...')
-                  else if (locationService.errorMessage != null)
-                    Text(
-                      locationService.errorMessage!,
-                      style: TextStyle(color: Theme.of(context).colorScheme.error),
-                    )
-                  else if (locationService.currentLocation != null)
-                    Text(
-                      locationService.currentLocation!.cityName,
-                      style: TextStyle(
-                        fontSize: ResponsiveUtils.fontSize(context, base: 16),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    )
-                  else
-                    const Text('Location not available'),
-                  
-                  if (locationService.currentLocation != null)
-                    Text(
-                      '${locationService.currentLocation!.latitude.toStringAsFixed(4)}, ${locationService.currentLocation!.longitude.toStringAsFixed(4)}',
-                      style: TextStyle(
-                        fontSize: ResponsiveUtils.fontSize(context, base: 12),
-                        color: Theme.of(context).textTheme.bodySmall?.color,
-                      ),
-                    ),
-                ],
+                )
+              : Text(
+                  _locationName,
+                  style: AppTheme.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+          const SizedBox(width: 8),
+          InkWell(
+            onTap: _loadLocation,
+            borderRadius: BorderRadius.circular(4),
+            child: Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: Icon(
+                Icons.refresh,
+                color: _isLoading 
+                    ? Colors.grey 
+                    : AppTheme.secondaryColor,
+                size: 16,
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: locationService.isLoading ? null : onRefresh,
-              tooltip: 'Refresh location',
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

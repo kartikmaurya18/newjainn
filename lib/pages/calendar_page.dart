@@ -1,324 +1,404 @@
-// pages/calendar_page.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
-import '../models/tithi_model.dart';
-import '../services/location_service.dart';
-import '../services/tithi_service.dart';
-import '../utils/date_utils.dart';
-import '../utils/responsive_utils.dart';
-import '../widgets/tithi_day_tile.dart';
-import '../widgets/location_widget.dart';
-import 'day_detail_page.dart';
+import 'package:table_calendar/table_calendar.dart';
+import 'package:jain_tithi_fixed/models/tithi_model.dart';
+import 'package:jain_tithi_fixed/services/tithi_service.dart';
+import 'package:jain_tithi_fixed/themes/app_theme.dart';
+import 'package:jain_tithi_fixed/utils/date_utils.dart' as date_util;
+import 'package:jain_tithi_fixed/widgets/location_widget.dart';
+import 'package:jain_tithi_fixed/widgets/tithi_day_tile.dart';
+import 'package:jain_tithi_fixed/pages/day_detail_page.dart';
 
 class CalendarPage extends StatefulWidget {
-  const CalendarPage({super.key});
+  const CalendarPage({Key? key}) : super(key: key);
 
   @override
   State<CalendarPage> createState() => _CalendarPageState();
 }
 
-class _CalendarPageState extends State<CalendarPage> {
-  DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
-  List<TithiModel> _monthTithis = [];
-  bool _isLoading = false;
+class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderStateMixin {
+  final TithiService _tithiService = TithiService();
+  
+  late DateTime _focusedDay;
+  late DateTime _selectedDay;
+  Map<DateTime, TithiModel> _tithis = {};
+  bool _isLoading = true;
+  late AnimationController _animationController;
+  late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    _selectedDay = _focusedDay;
-    _initializeLocation();
+    _focusedDay = DateTime.now();
+    _selectedDay = DateTime.now();
+    
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    
+    _animation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
+    
+    _loadMonthData();
+    _animationController.forward();
   }
-
-  Future<void> _initializeLocation() async {
-    final locationService = Provider.of<LocationService>(context, listen: false);
-    await locationService.init();
-    if (locationService.currentLocation != null) {
-      _loadMonthData();
-    }
+  
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadMonthData() async {
-    if (mounted) {
-      setState(() {
-        _isLoading = true;
-      });
-    }
-
-    try {
-      final locationService = Provider.of<LocationService>(context, listen: false);
-      final tithiService = Provider.of<TithiService>(context, listen: false);
-      
-      if (locationService.currentLocation != null) {
-        final tithis = await tithiService.getTithisForMonth(
-          _focusedDay.year,
-          _focusedDay.month,
-          locationService.currentLocation!.latitude,
-          locationService.currentLocation!.longitude,
-        );
-        
-        if (mounted) {
-          setState(() {
-            _monthTithis = tithis;
-            _isLoading = false;
-          });
-        }
-      } else {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading calendar data: $e')),
-        );
-      }
-    }
-  }
-
-  void _onDaySelected(DateTime selectedDay) {
     setState(() {
-      _selectedDay = selectedDay;
+      _isLoading = true;
     });
     
-    // Find tithi for the selected day
-    final selectedTithi = _monthTithis.firstWhere(
-      (tithi) => DateTimeUtils.isSameDay(tithi.date, selectedDay),
-      orElse: () => _createPlaceholderTithi(selectedDay),
-    );
+    final tithis = await _tithiService.getTithisForMonth(_focusedDay);
     
-    // Navigate to details page
+    setState(() {
+      _tithis = tithis;
+      _isLoading = false;
+    });
+  }
+
+  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
+    setState(() {
+      _selectedDay = selectedDay;
+      _focusedDay = focusedDay;
+    });
+    
+    // Navigate to day detail page
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => DayDetailPage(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => DayDetailPage(
           date: selectedDay,
-          tithi: selectedTithi,
         ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOut;
+          
+          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
       ),
     );
   }
 
-  void _onMonthChanged(DateTime newMonth) {
+  void _onPageChanged(DateTime focusedDay) {
     setState(() {
-      _focusedDay = newMonth;
+      _focusedDay = focusedDay;
     });
+    
     _loadMonthData();
-  }
-
-  void _refreshLocation() async {
-    final locationService = Provider.of<LocationService>(context, listen: false);
-    await locationService.getCurrentLocation();
-    _loadMonthData();
-  }
-
-  TithiModel _createPlaceholderTithi(DateTime date) {
-    return TithiModel(
-      name: 'Unknown',
-      isShubh: false,
-      date: date,
-      sunrise: DateTime(date.year, date.month, date.day, 6, 0),
-      sunset: DateTime(date.year, date.month, date.day, 18, 0),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final locationService = Provider.of<LocationService>(context);
-    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Jain Calendar'),
-        centerTitle: false,
+        elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(Theme.of(context).brightness == Brightness.dark 
-                ? Icons.light_mode 
-                : Icons.dark_mode),
+            icon: const Icon(Icons.info_outline),
             onPressed: () {
-              // This would be implemented with a theme provider in a complete app
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Theme toggle would be implemented here')),
-              );
+              _showInfoDialog();
             },
-            tooltip: 'Toggle theme',
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Location widget
-          Consumer<LocationService>(
-            builder: (context, locationService, child) {
-              return LocationWidget(
-                locationService: locationService,
-                onRefresh: _refreshLocation,
-              );
-            },
-          ),
-          
-          // Month navigation
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left),
-                  onPressed: () {
-                    final previousMonth = DateTime(
-                      _focusedDay.year,
-                      _focusedDay.month - 1,
-                      1,
-                    );
-                    _onMonthChanged(previousMonth);
-                  },
-                ),
-                Text(
-                  DateFormat('MMMM yyyy').format(_focusedDay),
-                  style: TextStyle(
-                    fontSize: ResponsiveUtils.fontSize(context, base: 18),
-                    fontWeight: FontWeight.bold,
+      body: FadeTransition(
+        opacity: _animation,
+        child: Column(
+          children: [
+            Container(
+              color: AppTheme.primaryColor,
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          date_util.DateUtil.formatMonthDay(_selectedDay),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        LocationWidget(
+                          onLocationChanged: (_) {
+                            // When location changes, reload data
+                            _loadMonthData();
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.chevron_right),
-                  onPressed: () {
-                    final nextMonth = DateTime(
-                      _focusedDay.year,
-                      _focusedDay.month + 1,
-                      1,
-                    );
-                    _onMonthChanged(nextMonth);
-                  },
-                ),
-              ],
+                ],
+              ),
+            ),
+            Expanded(
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: AppTheme.primaryColor,
+                      ),
+                    )
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          Card(
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: TableCalendar(
+                                firstDay: DateTime.utc(2020, 1, 1),
+                                lastDay: DateTime.utc(2030, 12, 31),
+                                focusedDay: _focusedDay,
+                                calendarFormat: CalendarFormat.month,
+                                selectedDayPredicate: (day) {
+                                  return date_util.DateUtil.isSameDay(_selectedDay, day);
+                                },
+                                onDaySelected: _onDaySelected,
+                                onPageChanged: _onPageChanged,
+                                headerStyle: const HeaderStyle(
+                                  titleCentered: true,
+                                  formatButtonVisible: false,
+                                  titleTextStyle: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                calendarStyle: CalendarStyle(
+                                  todayDecoration: BoxDecoration(
+                                    color: AppTheme.accentColor,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  selectedDecoration: BoxDecoration(
+                                    color: AppTheme.primaryColor,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                calendarBuilders: CalendarBuilders(
+                                  defaultBuilder: (context, day, focusedDay) {
+                                    // Find the tithi for this day, if available
+                                    TithiModel? tithi;
+                                    for (var entry in _tithis.entries) {
+                                      if (date_util.DateUtil.isSameDay(entry.key, day)) {
+                                        tithi = entry.value;
+                                        break;
+                                      }
+                                    }
+                                    
+                                    return TithiDayTile(
+                                      date: day,
+                                      tithi: tithi,
+                                      isToday: date_util.DateUtil.isSameDay(day, DateTime.now()),
+                                      onTap: () => _onDaySelected(day, focusedDay),
+                                    );
+                                  },
+                                  selectedBuilder: (context, day, focusedDay) {
+                                    // Find the tithi for this day, if available
+                                    TithiModel? tithi;
+                                    for (var entry in _tithis.entries) {
+                                      if (date_util.DateUtil.isSameDay(entry.key, day)) {
+                                        tithi = entry.value;
+                                        break;
+                                      }
+                                    }
+                                    
+                                    return TithiDayTile(
+                                      date: day,
+                                      tithi: tithi,
+                                      isSelected: true,
+                                      isToday: date_util.DateUtil.isSameDay(day, DateTime.now()),
+                                      onTap: () => _onDaySelected(day, focusedDay),
+                                    );
+                                  },
+                                  todayBuilder: (context, day, focusedDay) {
+                                    // Find the tithi for this day, if available
+                                    TithiModel? tithi;
+                                    for (var entry in _tithis.entries) {
+                                      if (date_util.DateUtil.isSameDay(entry.key, day)) {
+                                        tithi = entry.value;
+                                        break;
+                                      }
+                                    }
+                                    
+                                    return TithiDayTile(
+                                      date: day,
+                                      tithi: tithi,
+                                      isToday: true,
+                                      onTap: () => _onDaySelected(day, focusedDay),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Card(
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Calendar Legend',
+                                    style: AppTheme.headingSmall,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _buildLegendItem(
+                                    color: AppTheme.primaryColor,
+                                    text: 'Selected Day',
+                                  ),
+                                  _buildLegendItem(
+                                    color: AppTheme.accentColor,
+                                    text: 'Today',
+                                  ),
+                                  _buildLegendItem(
+                                    color: Colors.white,
+                                    borderColor: Colors.black26,
+                                    text: 'Purnima (Full Moon)',
+                                  ),
+                                  _buildLegendItem(
+                                    color: Colors.black87,
+                                    text: 'Amavasya (New Moon)',
+                                    textColor: Colors.white,
+                                  ),
+                                  _buildLegendItem(
+                                    color: AppTheme.secondaryColor.withOpacity(0.3),
+                                    text: 'Special Tithi (Ashtami, Ekadashi, etc.)',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                _selectedDay = DateTime.now();
+                                _focusedDay = DateTime.now();
+                              });
+                              _loadMonthData();
+                            },
+                            icon: const Icon(Icons.today),
+                            label: const Text('Today'),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets
+                              .symmetric(horizontal: 24, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLegendItem({
+    required Color color,
+    Color? borderColor,
+    required String text,
+    Color textColor = AppTheme.textPrimary,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: Row(
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              border: borderColor != null
+                  ? Border.all(color: borderColor, width: 1)
+                  : null,
             ),
           ),
-          
-          // Weekday headers
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Row(
-              children: _buildWeekdayHeaders(context),
-            ),
-          ),
-          
-          // Calendar grid
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : locationService.currentLocation == null
-                    ? const Center(child: Text('Please enable location to view calendar'))
-                    : _buildCalendarGrid(context),
+          const SizedBox(width: 12),
+          Text(
+            text,
+            style: AppTheme.bodyMedium.copyWith(color: textColor),
           ),
         ],
       ),
     );
   }
 
-  List<Widget> _buildWeekdayHeaders(BuildContext context) {
-    final weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-    return List.generate(7, (index) {
-      return Expanded(
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          alignment: Alignment.center,
-          child: Text(
-            weekdays[index],
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: ResponsiveUtils.fontSize(context, base: 14),
-            ),
+  void _showInfoDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('About Jain Calendar'),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'This app shows important ritual timings according to Jain traditions.',
+                style: TextStyle(fontSize: 16),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Timings shown:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              SizedBox(height: 8),
+              Text('• Sunrise & Sunset'),
+              Text('• Navkarshi (48 minutes after sunrise)'),
+              Text('• Porsi (End of first prahar)'),
+              Text('• Sadh Porsi (1.5 prahars after sunrise)'),
+              Text('• Purimaddha (Midday)'),
+              Text('• Avaddha (Beginning of last quarter)'),
+              SizedBox(height: 16),
+              Text(
+                'Tap on any day to see detailed timings.',
+                style: TextStyle(fontStyle: FontStyle.italic),
+              ),
+            ],
           ),
         ),
-      );
-    });
-  }
-
-  Widget _buildCalendarGrid(BuildContext context) {
-    // Get all dates in the month
-    final firstDayOfMonth = DateTime(_focusedDay.year, _focusedDay.month, 1);
-    final daysInMonth = DateTime(_focusedDay.year, _focusedDay.month + 1, 0).day;
-    
-    // Calculate padding days to start the month on the correct weekday
-    final startWeekday = firstDayOfMonth.weekday % 7; // 0 is Sunday in our grid
-    final paddingDays = List.generate(startWeekday, (index) {
-      final day = firstDayOfMonth.subtract(Duration(days: startWeekday - index));
-      return day;
-    });
-    
-    // All days to display (padding + month days)
-    final allDays = [
-      ...paddingDays,
-      ...List.generate(daysInMonth, (index) => 
-        DateTime(_focusedDay.year, _focusedDay.month, index + 1)
-      ),
-    ];
-    
-    // Calculate total rows needed
-    final totalDays = allDays.length;
-    final rowCount = (totalDays / 7).ceil();
-    
-    // Add padding to complete the last row if needed
-    final remainingDays = rowCount * 7 - totalDays;
-    if (remainingDays > 0) {
-      final lastDay = allDays.last;
-      allDays.addAll(
-        List.generate(remainingDays, (index) => 
-          lastDay.add(Duration(days: index + 1))
-        )
-      );
-    }
-    
-    // Build calendar grid
-    return GridView.builder(
-      padding: const EdgeInsets.all(8),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 7,
-        childAspectRatio: 0.85,
-      ),
-      itemCount: allDays.length,
-      itemBuilder: (context, index) {
-        final day = allDays[index];
-        final isCurrentMonth = day.month == _focusedDay.month;
-        
-        // Find tithi for this day if we have it
-        TithiModel? dayTithi;
-        if (isCurrentMonth) {
-          try {
-            dayTithi = _monthTithis.firstWhere(
-              (tithi) => DateTimeUtils.isSameDay(tithi.date, day),
-              orElse: () => throw Exception('Tithi not found'),
-            );
-          } catch (_) {
-            // If we don't have tithi data, leave it null
-          }
-        }
-        
-        final isToday = DateTimeUtils.isSameDay(day, DateTime.now());
-        final isSelected = _selectedDay != null && 
-                          DateTimeUtils.isSameDay(day, _selectedDay!);
-        
-        return Opacity(
-          opacity: isCurrentMonth ? 1.0 : 0.3,
-          child: TithiDayTile(
-            date: day,
-            tithiData: dayTithi,
-            isSelected: isSelected,
-            isToday: isToday,
-            onTap: isCurrentMonth ? () => _onDaySelected(day) : () {},
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
           ),
-        );
-      },
+        ],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
     );
   }
 }

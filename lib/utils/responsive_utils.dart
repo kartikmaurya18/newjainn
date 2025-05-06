@@ -1,59 +1,85 @@
-// utils/responsive_utils.dart
 import 'package:flutter/material.dart';
 
 class ResponsiveUtils {
-  static bool isMobile(BuildContext context) => 
-      MediaQuery.of(context).size.width < 600;
+  static bool isMobile(BuildContext context) {
+    return MediaQuery.of(context).size.width < 600;
+  }
   
-  static bool isTablet(BuildContext context) => 
-      MediaQuery.of(context).size.width >= 600 && 
-      MediaQuery.of(context).size.width < 1200;
+  static bool isTablet(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    return width >= 600 && width < 900;
+  }
   
-  static bool isDesktop(BuildContext context) => 
-      MediaQuery.of(context).size.width >= 1200;
+  static bool isDesktop(BuildContext context) {
+    return MediaQuery.of(context).size.width >= 900;
+  }
   
-  // Get value based on screen size
-  static double value(BuildContext context, {
-    required double mobile,
-    double? tablet,
-    double? desktop,
-  }) {
-    double screenWidth = MediaQuery.of(context).size.width;
+  static double getCalendarWidth(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
     
-    if (screenWidth >= 1200) {
-      return desktop ?? tablet ?? mobile;
-    } else if (screenWidth >= 600) {
-      return tablet ?? mobile;
+    if (width < 600) {
+      return width * 0.95; // 95% of screen width on mobile
+    } else if (width < 900) {
+      return width * 0.8; // 80% of screen width on tablet
     } else {
-      return mobile;
+      return 800; // Fixed width on desktop
     }
   }
   
-  // Get font size based on screen size
-  static double fontSize(BuildContext context, {
-    required double base,
-    double factor = 0.3,
-  }) {
+  static EdgeInsets getPagePadding(BuildContext context) {
     if (isMobile(context)) {
-      return base;
+      return const EdgeInsets.all(16.0);
     } else if (isTablet(context)) {
-      return base * (1 + factor);
+      return const EdgeInsets.all(24.0);
     } else {
-      return base * (1 + factor * 2);
+      return const EdgeInsets.all(32.0);
     }
   }
   
-  // Get padding based on screen size
-  static EdgeInsets padding(BuildContext context, {
-    required double base,
-    double factor = 0.5,
-  }) {
+  static double getIconSize(BuildContext context) {
     if (isMobile(context)) {
-      return EdgeInsets.all(base);
-    } else if (isTablet(context)) {
-      return EdgeInsets.all(base * (1 + factor));
+      return 24.0;
     } else {
-      return EdgeInsets.all(base * (1 + factor * 2));
+      return 28.0;
+    }
+  }
+  
+  static double getFontSize(BuildContext context, {required FontSize size}) {
+    if (isMobile(context)) {
+      switch (size) {
+        case FontSize.small:
+          return 12.0;
+        case FontSize.medium:
+          return 14.0;
+        case FontSize.large:
+          return 16.0;
+        case FontSize.xlarge:
+          return 20.0;
+      }
+    } else if (isTablet(context)) {
+      switch (size) {
+        case FontSize.small:
+          return 14.0;
+        case FontSize.medium:
+          return 16.0;
+        case FontSize.large:
+          return 18.0;
+        case FontSize.xlarge:
+          return 24.0;
+      }
+    } else {
+      switch (size) {
+        case FontSize.small:
+          return 14.0;
+        case FontSize.medium:
+          return 16.0;
+        case FontSize.large:
+          return 20.0;
+        case FontSize.xlarge:
+          return 28.0;
+      }
     }
   }
 }
+
+enum FontSize { small, medium, large, xlarge }
