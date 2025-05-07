@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+// In calendar_page.dart
+import 'package:jain_tithi_fixed/widgets/tithi_day_tile.dart';
 import 'package:jain_tithi_fixed/models/tithi_model.dart';
 import 'package:jain_tithi_fixed/services/tithi_service.dart';
 import 'package:jain_tithi_fixed/themes/app_theme.dart';
 import 'package:jain_tithi_fixed/utils/date_utils.dart' as date_util;
 import 'package:jain_tithi_fixed/widgets/location_widget.dart';
-import 'package:jain_tithi_fixed/widgets/tithi_day_tile.dart';
 import 'package:jain_tithi_fixed/pages/day_detail_page.dart';
 
 class CalendarPage extends StatefulWidget {
