@@ -1,31 +1,32 @@
 // models/tithi_model.dart
+
 class TithiModel {
   final String tithi;
-  final bool isShubh; // Whether this is an auspicious day
+  final bool isShubh;
   final DateTime date;
   final DateTime sunrise;
   final DateTime sunset;
 
-  TithiModel({
+  const TithiModel({
     required this.tithi,
     required this.isShubh,
     required this.date,
     required this.sunrise,
-    required this.sunset,
+    required this.sunset, required tithiNumber, required paksha, required isSpecial, required tithiName,
   });
 
-  // Factory constructor to create a TithiModel from API response
-  factory TithiModel.fromJson(Map<String, dynamic> json, DateTime date) {
+  /// Factory method to create a TithiModel from JSON (e.g., API or cache)
+  factory TithiModel.fromJson(Map<String, dynamic> json) {
     return TithiModel(
       tithi: json['tithi'] ?? 'Unknown',
       isShubh: json['isShubh'] ?? false,
-      date: date,
+      date: DateTime.parse(json['date']),
       sunrise: DateTime.parse(json['sunrise']),
       sunset: DateTime.parse(json['sunset']),
     );
   }
 
-  // For caching purposes
+  /// For saving to SharedPreferences or sending via API
   Map<String, dynamic> toJson() {
     return {
       'tithi': tithi,
@@ -34,5 +35,16 @@ class TithiModel {
       'sunrise': sunrise.toIso8601String(),
       'sunset': sunset.toIso8601String(),
     };
+  }
+
+  /// Returns an empty model (useful for fallbacks)
+  static TithiModel empty(DateTime date) {
+    return TithiModel(
+      tithi: 'Unknown',
+      isShubh: false,
+      date: date,
+      sunrise: date.add(const Duration(hours: 6)),
+      sunset: date.add(const Duration(hours: 18)),
+    );
   }
 }
