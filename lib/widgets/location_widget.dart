@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:jain_calendar/services/location_service.dart';
+import 'package:jain_tithi_fixed/services/location_service.dart';
 import 'package:jain_tithi_fixed/themes/app_theme.dart';
 
 class LocationWidget extends StatefulWidget {
@@ -32,24 +32,22 @@ class _LocationWidgetState extends State<LocationWidget> {
     });
 
     try {
-      // Try to get cached location first
       Map<String, dynamic>? location = await _locationService.getCachedLocation();
-      
-      // If no cached location, get current location
-      if (location == null) {
-        location = await _locationService.getCurrentLocation();
-      }
-      
+
+      // If no cached location, fetch current location
+      location ??= await _locationService.getCurrentLocation();
+
+      final city = location['city'] ?? 'Unknown location';
+
       setState(() {
-        _locationName = location['city'];
+        _locationName = city;
         _locationData = location;
         _isLoading = false;
       });
-      
-      if (widget.onLocationChanged != null) {
-        widget.onLocationChanged!(location);
-      }
+
+      widget.onLocationChanged?.call(location);
     } catch (e) {
+      debugPrint('Error fetching location: $e');
       setState(() {
         _locationName = 'Location unavailable';
         _isLoading = false;
@@ -83,8 +81,8 @@ class _LocationWidgetState extends State<LocationWidget> {
           const SizedBox(width: 8),
           _isLoading
               ? const SizedBox(
-                  width: 12,
-                  height: 12,
+                  width: 16,
+                  height: 16,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     color: AppTheme.primaryColor,
@@ -98,15 +96,13 @@ class _LocationWidgetState extends State<LocationWidget> {
                 ),
           const SizedBox(width: 8),
           InkWell(
-            onTap: _loadLocation,
+            onTap: _isLoading ? null : _loadLocation,
             borderRadius: BorderRadius.circular(4),
             child: Padding(
               padding: const EdgeInsets.all(4.0),
               child: Icon(
                 Icons.refresh,
-                color: _isLoading 
-                    ? Colors.grey 
-                    : AppTheme.secondaryColor,
+                color: _isLoading ? Colors.grey : AppTheme.secondaryColor,
                 size: 16,
               ),
             ),

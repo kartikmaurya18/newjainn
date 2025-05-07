@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:jain_calendar/models/timing_model.dart';
-import 'package:jain_calendar/models/tithi_model.dart';
-import 'package:jain_calendar/services/location_service.dart';
+import 'package:jain_tithi_fixed/models/timming_model.dart';
+import 'package:jain_tithi_fixed/models/tithi_model.dart';
+import 'package:jain_tithi_fixed/services/location_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 

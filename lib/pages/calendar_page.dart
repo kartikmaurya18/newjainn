@@ -17,7 +17,7 @@ class CalendarPage extends StatefulWidget {
 
 class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderStateMixin {
   final TithiService _tithiService = TithiService();
-  
+
   late DateTime _focusedDay;
   late DateTime _selectedDay;
   Map<DateTime, TithiModel> _tithis = {};
@@ -30,21 +30,21 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
     super.initState();
     _focusedDay = DateTime.now();
     _selectedDay = DateTime.now();
-    
+
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
-    
+
     _animation = CurvedAnimation(
       parent: _animationController,
       curve: Curves.easeInOut,
     );
-    
+
     _loadMonthData();
     _animationController.forward();
   }
-  
+
   @override
   void dispose() {
     _animationController.dispose();
@@ -52,12 +52,8 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
   }
 
   Future<void> _loadMonthData() async {
-    setState(() {
-      _isLoading = true;
-    });
-    
+    setState(() => _isLoading = true);
     final tithis = await _tithiService.getTithisForMonth(_focusedDay);
-    
     setState(() {
       _tithis = tithis;
       _isLoading = false;
@@ -69,35 +65,21 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
       _selectedDay = selectedDay;
       _focusedDay = focusedDay;
     });
-    
-    // Navigate to day detail page
+
     Navigator.push(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => DayDetailPage(
-          date: selectedDay,
-        ),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(1.0, 0.0);
-          const end = Offset.zero;
-          const curve = Curves.easeInOut;
-          
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-          
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          );
+        pageBuilder: (_, animation, __) => DayDetailPage(date: selectedDay),
+        transitionsBuilder: (_, animation, __, child) {
+          final tween = Tween(begin: const Offset(1.0, 0.0), end: Offset.zero).chain(CurveTween(curve: Curves.easeInOut));
+          return SlideTransition(position: animation.drive(tween), child: child);
         },
       ),
     );
   }
 
   void _onPageChanged(DateTime focusedDay) {
-    setState(() {
-      _focusedDay = focusedDay;
-    });
-    
+    setState(() => _focusedDay = focusedDay);
     _loadMonthData();
   }
 
@@ -110,9 +92,7 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
         actions: [
           IconButton(
             icon: const Icon(Icons.info_outline),
-            onPressed: () {
-              _showInfoDialog();
-            },
+            onPressed: _showInfoDialog,
           ),
         ],
       ),
@@ -120,216 +100,142 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
         opacity: _animation,
         child: Column(
           children: [
-            Container(
-              color: AppTheme.primaryColor,
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          date_util.DateUtil.formatMonthDay(_selectedDay),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        LocationWidget(
-                          onLocationChanged: (_) {
-                            // When location changes, reload data
-                            _loadMonthData();
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: AppTheme.primaryColor,
-                      ),
-                    )
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          Card(
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: TableCalendar(
-                                firstDay: DateTime.utc(2020, 1, 1),
-                                lastDay: DateTime.utc(2030, 12, 31),
-                                focusedDay: _focusedDay,
-                                calendarFormat: CalendarFormat.month,
-                                selectedDayPredicate: (day) {
-                                  return date_util.DateUtil.isSameDay(_selectedDay, day);
-                                },
-                                onDaySelected: _onDaySelected,
-                                onPageChanged: _onPageChanged,
-                                headerStyle: const HeaderStyle(
-                                  titleCentered: true,
-                                  formatButtonVisible: false,
-                                  titleTextStyle: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                calendarStyle: CalendarStyle(
-                                  todayDecoration: BoxDecoration(
-                                    color: AppTheme.accentColor,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  selectedDecoration: BoxDecoration(
-                                    color: AppTheme.primaryColor,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                calendarBuilders: CalendarBuilders(
-                                  defaultBuilder: (context, day, focusedDay) {
-                                    // Find the tithi for this day, if available
-                                    TithiModel? tithi;
-                                    for (var entry in _tithis.entries) {
-                                      if (date_util.DateUtil.isSameDay(entry.key, day)) {
-                                        tithi = entry.value;
-                                        break;
-                                      }
-                                    }
-                                    
-                                    return TithiDayTile(
-                                      date: day,
-                                      tithi: tithi,
-                                      isToday: date_util.DateUtil.isSameDay(day, DateTime.now()),
-                                      onTap: () => _onDaySelected(day, focusedDay),
-                                    );
-                                  },
-                                  selectedBuilder: (context, day, focusedDay) {
-                                    // Find the tithi for this day, if available
-                                    TithiModel? tithi;
-                                    for (var entry in _tithis.entries) {
-                                      if (date_util.DateUtil.isSameDay(entry.key, day)) {
-                                        tithi = entry.value;
-                                        break;
-                                      }
-                                    }
-                                    
-                                    return TithiDayTile(
-                                      date: day,
-                                      tithi: tithi,
-                                      isSelected: true,
-                                      isToday: date_util.DateUtil.isSameDay(day, DateTime.now()),
-                                      onTap: () => _onDaySelected(day, focusedDay),
-                                    );
-                                  },
-                                  todayBuilder: (context, day, focusedDay) {
-                                    // Find the tithi for this day, if available
-                                    TithiModel? tithi;
-                                    for (var entry in _tithis.entries) {
-                                      if (date_util.DateUtil.isSameDay(entry.key, day)) {
-                                        tithi = entry.value;
-                                        break;
-                                      }
-                                    }
-                                    
-                                    return TithiDayTile(
-                                      date: day,
-                                      tithi: tithi,
-                                      isToday: true,
-                                      onTap: () => _onDaySelected(day, focusedDay),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          Card(
-                            elevation: 2,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Calendar Legend',
-                                    style: AppTheme.headingSmall,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  _buildLegendItem(
-                                    color: AppTheme.primaryColor,
-                                    text: 'Selected Day',
-                                  ),
-                                  _buildLegendItem(
-                                    color: AppTheme.accentColor,
-                                    text: 'Today',
-                                  ),
-                                  _buildLegendItem(
-                                    color: Colors.white,
-                                    borderColor: Colors.black26,
-                                    text: 'Purnima (Full Moon)',
-                                  ),
-                                  _buildLegendItem(
-                                    color: Colors.black87,
-                                    text: 'Amavasya (New Moon)',
-                                    textColor: Colors.white,
-                                  ),
-                                  _buildLegendItem(
-                                    color: AppTheme.secondaryColor.withOpacity(0.3),
-                                    text: 'Special Tithi (Ashtami, Ekadashi, etc.)',
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              setState(() {
-                                _selectedDay = DateTime.now();
-                                _focusedDay = DateTime.now();
-                              });
-                              _loadMonthData();
-                            },
-                            icon: const Icon(Icons.today),
-                            label: const Text('Today'),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets
-                              .symmetric(horizontal: 24, vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-            ),
+            _buildHeader(),
+            Expanded(child: _isLoading ? _buildLoader() : _buildCalendarContent()),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLegendItem({
-    required Color color,
-    Color? borderColor,
-    required String text,
-    Color textColor = AppTheme.textPrimary,
-  }) {
+  Widget _buildHeader() {
+    return Container(
+      color: AppTheme.primaryColor,
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              date_util.DateUtil.formatMonthDay(_selectedDay),
+              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            LocationWidget(onLocationChanged: (_) => _loadMonthData()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoader() {
+    return const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor));
+  }
+
+  Widget _buildCalendarContent() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          _buildCalendar(),
+          const SizedBox(height: 20),
+          _buildLegendCard(),
+          const SizedBox(height: 20),
+          _buildTodayButton(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCalendar() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: TableCalendar(
+          firstDay: DateTime.utc(2020, 1, 1),
+          lastDay: DateTime.utc(2030, 12, 31),
+          focusedDay: _focusedDay,
+          calendarFormat: CalendarFormat.month,
+          selectedDayPredicate: (day) => date_util.DateUtil.isSameDay(_selectedDay, day),
+          onDaySelected: _onDaySelected,
+          onPageChanged: _onPageChanged,
+          headerStyle: const HeaderStyle(
+            titleCentered: true,
+            formatButtonVisible: false,
+            titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          calendarStyle: CalendarStyle(
+            todayDecoration: BoxDecoration(color: AppTheme.accentColor, shape: BoxShape.circle),
+            selectedDecoration: BoxDecoration(color: AppTheme.primaryColor, shape: BoxShape.circle),
+          ),
+          calendarBuilders: CalendarBuilders(
+            defaultBuilder: _buildDayTile,
+            selectedBuilder: (context, day, focusedDay) => _buildDayTile(context, day, focusedDay, isSelected: true),
+            todayBuilder: (context, day, focusedDay) => _buildDayTile(context, day, focusedDay, isToday: true),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDayTile(BuildContext context, DateTime day, DateTime focusedDay, {bool isSelected = false, bool isToday = false}) {
+    final tithi = _tithis.entries.firstWhere(
+      (entry) => date_util.DateUtil.isSameDay(entry.key, day),
+      orElse: () => MapEntry(day, TithiModel.empty()),
+    ).value;
+
+    return TithiDayTile(
+      date: day,
+      tithi: tithi,
+      isSelected: isSelected,
+      isToday: isToday,
+      onTap: () => _onDaySelected(day, focusedDay),
+    );
+  }
+
+  Widget _buildLegendCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Calendar Legend', style: AppTheme.headingSmall),
+            const SizedBox(height: 12),
+            _buildLegendItem(color: AppTheme.primaryColor, text: 'Selected Day'),
+            _buildLegendItem(color: AppTheme.accentColor, text: 'Today'),
+            _buildLegendItem(color: Colors.white, borderColor: Colors.black26, text: 'Purnima (Full Moon)'),
+            _buildLegendItem(color: Colors.black87, text: 'Amavasya (New Moon)', textColor: Colors.white),
+            _buildLegendItem(color: AppTheme.secondaryColor.withOpacity(0.3), text: 'Special Tithi (Ashtami, Ekadashi, etc.)'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTodayButton() {
+    return ElevatedButton.icon(
+      onPressed: () {
+        setState(() {
+          _selectedDay = DateTime.now();
+          _focusedDay = DateTime.now();
+        });
+        _loadMonthData();
+      },
+      icon: const Icon(Icons.today),
+      label: const Text('Today'),
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      ),
+    );
+  }
+
+  Widget _buildLegendItem({required Color color, Color? borderColor, required String text, Color textColor = AppTheme.textPrimary}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6.0),
       child: Row(
@@ -340,16 +246,11 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
             decoration: BoxDecoration(
               color: color,
               shape: BoxShape.circle,
-              border: borderColor != null
-                  ? Border.all(color: borderColor, width: 1)
-                  : null,
+              border: borderColor != null ? Border.all(color: borderColor, width: 1) : null,
             ),
           ),
           const SizedBox(width: 12),
-          Text(
-            text,
-            style: AppTheme.bodyMedium.copyWith(color: textColor),
-          ),
+          Text(text, style: AppTheme.bodyMedium.copyWith(color: textColor)),
         ],
       ),
     );
@@ -365,15 +266,9 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'This app shows important ritual timings according to Jain traditions.',
-                style: TextStyle(fontSize: 16),
-              ),
+              Text('This app shows important ritual timings according to Jain traditions.', style: TextStyle(fontSize: 16)),
               SizedBox(height: 16),
-              Text(
-                'Timings shown:',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
+              Text('Timings shown:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               SizedBox(height: 8),
               Text('• Sunrise & Sunset'),
               Text('• Navkarshi (48 minutes after sunrise)'),
@@ -382,10 +277,7 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
               Text('• Purimaddha (Midday)'),
               Text('• Avaddha (Beginning of last quarter)'),
               SizedBox(height: 16),
-              Text(
-                'Tap on any day to see detailed timings.',
-                style: TextStyle(fontStyle: FontStyle.italic),
-              ),
+              Text('Tap on any day to see detailed timings.', style: TextStyle(fontStyle: FontStyle.italic)),
             ],
           ),
         ),
@@ -395,9 +287,7 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
             child: const Text('Close'),
           ),
         ],
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
   }

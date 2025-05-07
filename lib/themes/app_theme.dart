@@ -1,42 +1,62 @@
-// themes/app_theme.dart
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Primary colors for the app
+  // Core Colors
   static const Color primaryColor = Color(0xFF5E35B1); // Deep Purple
   static const Color secondaryColor = Color(0xFFFF9800); // Orange
   static const Color accentColor = Color(0xFFFFC107); // Amber
-  
-  // Background and surface colors
+
+  // Light Theme Colors
   static const Color lightBackground = Color(0xFFF5F5F5);
-  static const Color darkBackground = Color(0xFF121212);
-  
   static const Color lightSurface = Color(0xFFFFFFFF);
-  static const Color darkSurface = Color(0xFF1E1E1E);
-  
-  // Text colors
   static const Color lightTextPrimary = Color(0xFF212121);
   static const Color lightTextSecondary = Color(0xFF757575);
-  
+
+  // Dark Theme Colors
+  static const Color darkBackground = Color(0xFF121212);
+  static const Color darkSurface = Color(0xFF1E1E1E);
   static const Color darkTextPrimary = Color(0xFFE0E0E0);
   static const Color darkTextSecondary = Color(0xFF9E9E9E);
-  
-  // Semantic colors
+
+  // Semantic Colors
   static const Color success = Color(0xFF4CAF50);
   static const Color error = Color(0xFFF44336);
   static const Color warning = Color(0xFFFF9800);
   static const Color info = Color(0xFF2196F3);
-  
-  // Special calendar colors
-  static const Color todayHighlight = Color(0xFF5E35B1);
-  static const Color shubhColor = Color(0xFF4CAF50); // Green for auspicious days
-  static const Color ashubhColor = Color(0xFFF44336); // Red for inauspicious days
-  
-  // Create light theme
+
+  // Calendar Colors
+  static const Color todayHighlight = primaryColor;
+  static const Color shubhColor = success;
+  static const Color ashubhColor = error;
+
+  // Common Text Styles
+  static const TextStyle _baseTextStyle = TextStyle(fontSize: 14);
+
+  static final TextStyle bodyMediumLight =
+      _baseTextStyle.copyWith(color: lightTextPrimary);
+  static const TextStyle bodyLargeLight = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+    color: lightTextPrimary,
+  );
+
+  static final TextStyle bodyMediumDark =
+      _baseTextStyle.copyWith(color: darkTextPrimary);
+  static const TextStyle bodyLargeDark = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+    color: darkTextPrimary,
+  );
+
+  // Public Getters (optional, can be removed if unused)
+  static Color get cardColor => lightSurface;
+  static TextStyle get bodyMedium => bodyMediumLight;
+
+  // Light Theme
   static ThemeData lightTheme() {
     return ThemeData(
       brightness: Brightness.light,
-      colorScheme: ColorScheme.light(
+      colorScheme: const ColorScheme.light(
         primary: primaryColor,
         secondary: secondaryColor,
         surface: lightSurface,
@@ -57,33 +77,9 @@ class AppTheme {
         ),
         shadowColor: Colors.black.withOpacity(0.1),
       ),
-      textTheme: const TextTheme(
-        displayLarge: TextStyle(
-          color: lightTextPrimary,
-          fontWeight: FontWeight.bold,
-        ),
-        displayMedium: TextStyle(
-          color: lightTextPrimary,
-          fontWeight: FontWeight.bold,
-        ),
-        displaySmall: TextStyle(
-          color: lightTextPrimary,
-          fontWeight: FontWeight.bold,
-        ),
-        headlineMedium: TextStyle(
-          color: lightTextPrimary,
-          fontWeight: FontWeight.w600,
-        ),
-        titleLarge: TextStyle(
-          color: lightTextPrimary,
-          fontWeight: FontWeight.w600,
-        ),
-        bodyLarge: TextStyle(
-          color: lightTextPrimary,
-        ),
-        bodyMedium: TextStyle(
-          color: lightTextPrimary,
-        ),
+      textTheme: TextTheme(
+        bodyLarge: bodyLargeLight,
+        bodyMedium: bodyMediumLight,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -99,12 +95,12 @@ class AppTheme {
       useMaterial3: true,
     );
   }
-  
-  // Create dark theme
+
+  // Dark Theme
   static ThemeData darkTheme() {
     return ThemeData(
       brightness: Brightness.dark,
-      colorScheme: ColorScheme.dark(
+      colorScheme: const ColorScheme.dark(
         primary: primaryColor,
         secondary: secondaryColor,
         surface: darkSurface,
@@ -125,33 +121,9 @@ class AppTheme {
         ),
         shadowColor: Colors.black.withOpacity(0.3),
       ),
-      textTheme: const TextTheme(
-        displayLarge: TextStyle(
-          color: darkTextPrimary,
-          fontWeight: FontWeight.bold,
-        ),
-        displayMedium: TextStyle(
-          color: darkTextPrimary,
-          fontWeight: FontWeight.bold,
-        ),
-        displaySmall: TextStyle(
-          color: darkTextPrimary,
-          fontWeight: FontWeight.bold,
-        ),
-        headlineMedium: TextStyle(
-          color: darkTextPrimary,
-          fontWeight: FontWeight.w600,
-        ),
-        titleLarge: TextStyle(
-          color: darkTextPrimary,
-          fontWeight: FontWeight.w600,
-        ),
-        bodyLarge: TextStyle(
-          color: darkTextPrimary,
-        ),
-        bodyMedium: TextStyle(
-          color: darkTextPrimary,
-        ),
+      textTheme: TextTheme(
+        bodyLarge: bodyLargeDark,
+        bodyMedium: bodyMediumDark,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
