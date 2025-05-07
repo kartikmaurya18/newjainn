@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jain_tithi_fixed/models/tithi_model.dart'; // This is the main model used for daily tithi
-import 'package:jain_tithi_fixed/models/tithi_model.dart'; // Renamed from timing_model.dart
-import 'package:jain_tithi_fixed/models/timming_model.dart';
-import 'package:jain_tithi_fixed/models/tithi_details_model.dart';
-
+import 'package:jain_tithi_fixed/models/tithi_details_model.dart'; // Updated for details model
 import 'package:jain_tithi_fixed/services/location_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -25,16 +22,14 @@ class TithiService {
         final data = json.decode(cachedData);
         return TithiModel(
           date: date,
-          tithiName: data['tithiName'],
-          paksha: data['paksha'],
-          tithiNumber: data['tithiNumber'],
-          isSpecial: data['isSpecial'],
+          tithi: data['tithiName'],
+          isShubh: data['isSpecial'],
           sunrise: DateTime.parse(data['sunrise']),
           sunset: DateTime.parse(data['sunset']),
         );
       }
 
-      // Calculate new tithi using TithiDetailsModel (renamed from previous TithiModel)
+      // Calculate new tithi using TithiDetailsModel
       final details = TithiDetailsModel.fromDate(date);
 
       // Get sunrise/sunset
@@ -48,22 +43,22 @@ class TithiService {
       final sunrise = sunData['sunrise']!;
       final sunset = sunData['sunset']!;
 
-      final tithi = TithiModel(
-        date: date,
-        tithiName: details.tithiName,
-        paksha: details.paksha,
-        tithiNumber: details.tithiNumber,
-        isSpecial: details.isSpecial,
-        sunrise: sunrise,
-        sunset: sunset,
-      );
+      // Create TithiModel with new data
+final tithi = TithiModel(
+  tithiName: details.tithiName,
+  paksha: details.paksha,
+  tithiNumber: details.tithiNumber,
+  isSpecial: details.isSpecial,
+  date: date,
+  sunrise: sunrise,
+  sunset: sunset,
+);
+
 
       // Cache the result
       await prefs.setString(cacheKey, json.encode({
-        'tithiNumber': tithi.tithiNumber,
-        'tithiName': tithi.tithiName,
-        'paksha': tithi.paksha,
-        'isSpecial': tithi.isSpecial,
+        'tithiName': tithi.tithi,
+        'isSpecial': tithi.isShubh,
         'sunrise': tithi.sunrise.toIso8601String(),
         'sunset': tithi.sunset.toIso8601String(),
       }));
@@ -83,12 +78,12 @@ class TithiService {
       return TimingModel.calculate(
         tithi.sunrise,
         tithi.sunset,
-        tithi.tithiName,
+        tithi.tithi,
       );
     } catch (e) {
       debugPrint('Error getting timings: $e');
 
-      // fallback if anything fails
+      // Fallback if anything fails
       final baseDate = DateTime(date.year, date.month, date.day);
       final sunrise = baseDate.add(const Duration(hours: 6));
       final sunset = baseDate.add(const Duration(hours: 18));
@@ -98,7 +93,7 @@ class TithiService {
       return TimingModel.calculate(
         sunrise,
         sunset,
-        tithi.tithiName,
+        tithi.tithi,
       );
     }
   }
@@ -118,10 +113,8 @@ class TithiService {
           final tithiData = entry.value as Map<String, dynamic>;
           tithis[date] = TithiModel(
             date: date,
-            tithiName: tithiData['tithiName'],
-            paksha: tithiData['paksha'],
-            tithiNumber: tithiData['tithiNumber'],
-            isSpecial: tithiData['isSpecial'],
+            tithi: tithiData['tithiName'],
+            isShubh: tithiData['isSpecial'],
             sunrise: DateTime.parse(tithiData['sunrise']),
             sunset: DateTime.parse(tithiData['sunset']),
           );
@@ -140,10 +133,8 @@ class TithiService {
       final cacheData = tithis.map((key, value) => MapEntry(
             key.toIso8601String(),
             {
-              'tithiNumber': value.tithiNumber,
-              'tithiName': value.tithiName,
-              'paksha': value.paksha,
-              'isSpecial': value.isSpecial,
+              'tithiName': value.tithi,
+              'isSpecial': value.isShubh,
               'sunrise': value.sunrise.toIso8601String(),
               'sunset': value.sunset.toIso8601String(),
             },

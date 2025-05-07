@@ -48,6 +48,8 @@ class AppTheme {
     color: darkTextPrimary,
   );
 
+  static var textPrimary;
+
   // Public Getters (optional, can be removed if unused)
   static Color get cardColor => lightSurface;
   static TextStyle get bodyMedium => bodyMediumLight;
@@ -95,6 +97,11 @@ class AppTheme {
       useMaterial3: true,
     );
   }
+  static TextStyle headingSmall = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+    color: textPrimary,
+  );
 
   // Dark Theme
   static ThemeData darkTheme() {

@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 // In calendar_page.dart
-import 'package:jain_tithi_fixed/widgets/tithi_day_tile.dart';
+
 import 'package:jain_tithi_fixed/models/tithi_model.dart';
 import 'package:jain_tithi_fixed/services/tithi_service.dart';
 import 'package:jain_tithi_fixed/themes/app_theme.dart';
 import 'package:jain_tithi_fixed/utils/date_utils.dart' as date_util;
 import 'package:jain_tithi_fixed/widgets/location_widget.dart';
+import 'package:jain_tithi_fixed/widgets/tithi_day_tile.dart';
 import 'package:jain_tithi_fixed/pages/day_detail_page.dart';
 
 class CalendarPage extends StatefulWidget {
-  const CalendarPage({Key? key}) : super(key: key);
+   const CalendarPage({super.key});
 
   @override
   State<CalendarPage> createState() => _CalendarPageState();
@@ -167,7 +168,7 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
             formatButtonVisible: false,
             titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          calendarStyle: CalendarStyle(
+          calendarStyle: const CalendarStyle(
             todayDecoration: BoxDecoration(color: AppTheme.accentColor, shape: BoxShape.circle),
             selectedDecoration: BoxDecoration(color: AppTheme.primaryColor, shape: BoxShape.circle),
           ),

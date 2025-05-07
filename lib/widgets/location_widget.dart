@@ -6,9 +6,9 @@ class LocationWidget extends StatefulWidget {
   final Function(Map<String, dynamic>)? onLocationChanged;
 
   const LocationWidget({
-    Key? key,
+    super.key,
     this.onLocationChanged,
-  }) : super(key: key);
+  });
 
   @override
   State<LocationWidget> createState() => _LocationWidgetState();
@@ -18,7 +18,6 @@ class _LocationWidgetState extends State<LocationWidget> {
   final LocationService _locationService = LocationService();
   bool _isLoading = true;
   String _locationName = 'Loading location...';
-  Map<String, dynamic>? _locationData;
 
   @override
   void initState() {
@@ -41,7 +40,6 @@ class _LocationWidgetState extends State<LocationWidget> {
 
       setState(() {
         _locationName = city;
-        _locationData = location;
         _isLoading = false;
       });
 
@@ -64,6 +62,7 @@ class _LocationWidgetState extends State<LocationWidget> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
+            // ignore: deprecated_member_use
             color: Colors.black.withOpacity(0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),

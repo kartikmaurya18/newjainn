@@ -7,13 +7,15 @@ class TithiModel {
   final DateTime sunrise;
   final DateTime sunset;
 
-  const TithiModel({
-    required this.tithi,
-    required this.isShubh,
-    required this.date,
-    required this.sunrise,
-    required this.sunset, required tithiNumber, required paksha, required isSpecial, required tithiName,
-  });
+const TithiModel({
+  required this.tithi,
+  required this.isShubh,
+  required this.date,
+  required this.sunrise,
+  required this.sunset,
+});
+
+
 
   /// Factory method to create a TithiModel from JSON (e.g., API or cache)
   factory TithiModel.fromJson(Map<String, dynamic> json) {
