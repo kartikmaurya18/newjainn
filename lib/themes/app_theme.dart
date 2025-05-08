@@ -35,23 +35,60 @@ class AppTheme {
     fontWeight: FontWeight.bold,
   );
 
+  static var errorColor;
+
   static var bodyMedium;
 
-  // Public Getters (used dynamically)
-  static Color get textPrimary => lightTextPrimary;
-  static Color get errorColor => error;
+  static var cardColor;
 
-  static Color get cardColor => lightSurface;
-
+  // Light Theme Text Styles
   static TextStyle get bodyMediumLight =>
       const TextStyle(fontSize: 14, color: lightTextPrimary);
   static TextStyle get bodyLargeLight => const TextStyle(
       fontSize: 16, fontWeight: FontWeight.bold, color: lightTextPrimary);
 
+  // Dark Theme Text Styles
   static TextStyle get bodyMediumDark =>
       const TextStyle(fontSize: 14, color: darkTextPrimary);
   static TextStyle get bodyLargeDark => const TextStyle(
       fontSize: 16, fontWeight: FontWeight.bold, color: darkTextPrimary);
+
+  // Common Elevated Button Style
+  static ElevatedButtonThemeData _elevatedButtonTheme() {
+    return ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+    );
+  }
+
+  // Common Card Theme Style
+  static CardTheme _cardTheme(Color surfaceColor) {
+    return CardTheme(
+      color: surfaceColor,
+      elevation: 2,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+      ),
+      // ignore: deprecated_member_use
+      shadowColor: Colors.black.withOpacity(0.1),
+    );
+  }
+
+  // Common AppBar Theme
+  static AppBarTheme _appBarTheme(Color color) {
+    return AppBarTheme(
+      color: color,
+      elevation: 0,
+      iconTheme: const IconThemeData(color: Colors.white),
+    );
+  }
 
   // Light Theme
   static ThemeData lightTheme() {
@@ -61,38 +98,16 @@ class AppTheme {
         primary: primaryColor,
         secondary: secondaryColor,
         surface: lightSurface,
-        background: lightBackground,
         error: error,
       ),
       scaffoldBackgroundColor: lightBackground,
-      appBarTheme: const AppBarTheme(
-        color: primaryColor,
-        elevation: 0,
-        iconTheme: IconThemeData(color: Colors.white),
-      ),
-      cardTheme: CardTheme(
-        color: lightSurface,
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
-        ),
-        shadowColor: Colors.black.withOpacity(0.1),
-      ),
+      appBarTheme: _appBarTheme(primaryColor),
+      cardTheme: _cardTheme(lightSurface),
       textTheme: TextTheme(
         bodyLarge: bodyLargeLight,
         bodyMedium: bodyMediumLight,
       ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        ),
-      ),
+      elevatedButtonTheme: _elevatedButtonTheme(),
       useMaterial3: true,
     );
   }
@@ -105,38 +120,16 @@ class AppTheme {
         primary: primaryColor,
         secondary: secondaryColor,
         surface: darkSurface,
-        background: darkBackground,
         error: error,
       ),
       scaffoldBackgroundColor: darkBackground,
-      appBarTheme: const AppBarTheme(
-        color: Color(0xFF2C2C2C),
-        elevation: 0,
-        iconTheme: IconThemeData(color: Colors.white),
-      ),
-      cardTheme: CardTheme(
-        color: darkSurface,
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
-        ),
-        shadowColor: Colors.black.withOpacity(0.3),
-      ),
+      appBarTheme: _appBarTheme(const Color(0xFF2C2C2C)), // Darker AppBar color
+      cardTheme: _cardTheme(darkSurface),
       textTheme: TextTheme(
         bodyLarge: bodyLargeDark,
         bodyMedium: bodyMediumDark,
       ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        ),
-      ),
+      elevatedButtonTheme: _elevatedButtonTheme(),
       useMaterial3: true,
     );
   }
