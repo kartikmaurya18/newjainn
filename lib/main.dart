@@ -3,7 +3,7 @@ import 'package:jain_tithi_fixed/pages/calendar_page.dart';
 import 'package:jain_tithi_fixed/themes/app_theme.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Required for async services like SharedPreferences
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const JainCalendarApp());
 }
 
@@ -14,7 +14,7 @@ class JainCalendarApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Jain Tithi Calendar',
-theme: AppTheme.lightTheme(),
+      theme: AppTheme.lightTheme(), // FIXED: Call the function
       debugShowCheckedModeBanner: false,
       home: const CalendarPage(),
     );
