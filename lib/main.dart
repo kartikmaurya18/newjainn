@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:jain_tithi_fixed/pages/calendar_page.dart';
 import 'package:jain_tithi_fixed/themes/app_theme.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Required for async services like SharedPreferences
   runApp(const JainCalendarApp());
 }
 
@@ -11,11 +12,11 @@ class JainCalendarApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'Jain Calendar',
-      theme: AppTheme.lightTheme, // Must be ThemeData
+    return MaterialApp(
+      title: 'Jain Tithi Calendar',
+theme: AppTheme.lightTheme(),
       debugShowCheckedModeBanner: false,
-      home: CalendarPage(),
+      home: const CalendarPage(),
     );
   }
 }
