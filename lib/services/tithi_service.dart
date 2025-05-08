@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:jain_tithi_fixed/models/tithi_model.dart'; // This is the main model used for daily tithi
-import 'package:jain_tithi_fixed/models/tithi_details_model.dart'; // Updated for details model
+import 'package:jain_tithi_fixed/models/tithi_model.dart';
+import 'package:jain_tithi_fixed/models/tithi_details_model.dart';
+import 'package:jain_tithi_fixed/models/timming_model.dart'; // Make sure this import exists
 import 'package:jain_tithi_fixed/services/location_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -9,30 +10,33 @@ class TithiService {
   final LocationService _locationService = LocationService();
   static const String _tithiCacheKey = 'tithi_cache_';
   static const Duration _cacheExpiration = Duration(hours: 24);
+  
+  var TimingModel;
 
-  // Get tithi for a given date with caching
   Future<TithiModel> getTithiForDate(DateTime date) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final cacheKey = '$_tithiCacheKey${date.year}_${date.month}_${date.day}';
 
-      // Check cache
       final cachedData = prefs.getString(cacheKey);
       if (cachedData != null) {
         final data = json.decode(cachedData);
+
         return TithiModel(
           date: date,
           tithi: data['tithiName'],
           isShubh: data['isSpecial'],
           sunrise: DateTime.parse(data['sunrise']),
           sunset: DateTime.parse(data['sunset']),
+          tithiName: data['tithiName'],
+          isSpecial: data['isSpecial'],
+          tithiNumber: data['tithiNumber'],
+          paksha: data['paksha'],
         );
       }
 
-      // Calculate new tithi using TithiDetailsModel
       final details = TithiDetailsModel.fromDate(date);
 
-      // Get sunrise/sunset
       final location = await _locationService.getCurrentLocation();
       final sunData = await _locationService.getSunriseSunset(
         location['latitude'],
@@ -43,21 +47,22 @@ class TithiService {
       final sunrise = sunData['sunrise']!;
       final sunset = sunData['sunset']!;
 
-      // Create TithiModel with new data
-final tithi = TithiModel(
-  tithiName: details.tithiName,
-  paksha: details.paksha,
-  tithiNumber: details.tithiNumber,
-  isSpecial: details.isSpecial,
-  date: date,
-  sunrise: sunrise,
-  sunset: sunset,
-);
+      final tithi = TithiModel(
+        tithi: details.tithiName,
+        tithiName: details.tithiName,
+        paksha: details.paksha,
+        tithiNumber: details.tithiNumber,
+        isShubh: details.isSpecial,
+        isSpecial: details.isSpecial,
+        date: date,
+        sunrise: sunrise,
+        sunset: sunset,
+      );
 
-
-      // Cache the result
       await prefs.setString(cacheKey, json.encode({
         'tithiName': tithi.tithi,
+        'tithiNumber': tithi.tithiNumber,
+        'paksha': tithi.paksha,
         'isSpecial': tithi.isShubh,
         'sunrise': tithi.sunrise.toIso8601String(),
         'sunset': tithi.sunset.toIso8601String(),
@@ -66,15 +71,13 @@ final tithi = TithiModel(
       return tithi;
     } catch (e) {
       debugPrint('Error getting tithi: $e');
-      return TithiModel.empty(date); // fallback
+      return TithiModel.empty(date);
     }
   }
 
-  // Get timings for a given date
   Future<TimingModel> getTimingsForDate(DateTime date) async {
     try {
       final tithi = await getTithiForDate(date);
-
       return TimingModel.calculate(
         tithi.sunrise,
         tithi.sunset,
@@ -83,7 +86,6 @@ final tithi = TithiModel(
     } catch (e) {
       debugPrint('Error getting timings: $e');
 
-      // Fallback if anything fails
       final baseDate = DateTime(date.year, date.month, date.day);
       final sunrise = baseDate.add(const Duration(hours: 6));
       final sunset = baseDate.add(const Duration(hours: 18));
@@ -98,7 +100,6 @@ final tithi = TithiModel(
     }
   }
 
-  // Get tithi and timing data for an entire month with caching
   Future<Map<DateTime, TithiModel>> getTithisForMonth(DateTime month) async {
     final Map<DateTime, TithiModel> tithis = {};
     final prefs = await SharedPreferences.getInstance();
@@ -117,6 +118,10 @@ final tithi = TithiModel(
             isShubh: tithiData['isSpecial'],
             sunrise: DateTime.parse(tithiData['sunrise']),
             sunset: DateTime.parse(tithiData['sunset']),
+            tithiName: tithiData['tithiName'],
+            paksha: tithiData['paksha'],
+            tithiNumber: tithiData['tithiNumber'],
+            isSpecial: tithiData['isSpecial'],
           );
         }
         return tithis;
@@ -134,6 +139,8 @@ final tithi = TithiModel(
             key.toIso8601String(),
             {
               'tithiName': value.tithi,
+              'tithiNumber': value.tithiNumber,
+              'paksha': value.paksha,
               'isSpecial': value.isShubh,
               'sunrise': value.sunrise.toIso8601String(),
               'sunset': value.sunset.toIso8601String(),

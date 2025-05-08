@@ -7,15 +7,15 @@ class TithiDayCell extends StatelessWidget {
   final TithiModel? tithiModel;
 
   const TithiDayCell({
-    Key? key,
+    super.key,
     required this.date,
     required this.isSelected,
     required this.tithiModel,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
-    final tithiName = tithiModel?.tithi ?? '';
+    final tithiName = tithiModel?.tithiName ?? '';
     return Container(
       decoration: BoxDecoration(
         color: isSelected ? Colors.blueAccent : Colors.transparent,

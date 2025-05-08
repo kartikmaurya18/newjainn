@@ -1,52 +1,73 @@
-// models/tithi_model.dart
-
 class TithiModel {
-  final String tithi;
+  final String tithiName;
+  final bool isSpecial;
+  final int tithiNumber;
+  final String paksha;
   final bool isShubh;
   final DateTime date;
   final DateTime sunrise;
   final DateTime sunset;
 
-const TithiModel({
-  required this.tithi,
-  required this.isShubh,
-  required this.date,
-  required this.sunrise,
-  required this.sunset,
-});
+  final String? month;
+  final String? year;
 
+  var tithi;
 
+  const TithiModel({
+    required this.tithiName,
+    required this.isSpecial,
+    required this.tithiNumber,
+    required this.paksha,
+    required this.isShubh,
+    required this.date,
+    required this.sunrise,
+    required this.sunset,
+    this.month,
+    this.year, required tithi,
+  });
 
-  /// Factory method to create a TithiModel from JSON (e.g., API or cache)
   factory TithiModel.fromJson(Map<String, dynamic> json) {
     return TithiModel(
-      tithi: json['tithi'] ?? 'Unknown',
+      tithiName: json['tithiName'] ?? 'Unknown',
+      isSpecial: json['isSpecial'] ?? false,
+      tithiNumber: json['tithiNumber'] ?? 0,
+      paksha: json['paksha'] ?? 'Unknown',
       isShubh: json['isShubh'] ?? false,
       date: DateTime.parse(json['date']),
       sunrise: DateTime.parse(json['sunrise']),
       sunset: DateTime.parse(json['sunset']),
+      month: json['month'],
+      year: json['year'],
     );
   }
 
-  /// For saving to SharedPreferences or sending via API
   Map<String, dynamic> toJson() {
     return {
-      'tithi': tithi,
+      'tithiName': tithiName,
+      'isSpecial': isSpecial,
+      'tithiNumber': tithiNumber,
+      'paksha': paksha,
       'isShubh': isShubh,
       'date': date.toIso8601String(),
       'sunrise': sunrise.toIso8601String(),
       'sunset': sunset.toIso8601String(),
+      'month': month,
+      'year': year,
     };
   }
 
-  /// Returns an empty model (useful for fallbacks)
   static TithiModel empty(DateTime date) {
     return TithiModel(
-      tithi: 'Unknown',
+      tithiName: 'Unknown',
+      isSpecial: false,
+      tithiNumber: 0,
+      paksha: 'Unknown',
       isShubh: false,
       date: date,
       sunrise: date.add(const Duration(hours: 6)),
       sunset: date.add(const Duration(hours: 18)),
+      month: null,
+      year: null,
     );
   }
 }

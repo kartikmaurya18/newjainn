@@ -29,28 +29,22 @@ class AppTheme {
   static const Color shubhColor = success;
   static const Color ashubhColor = error;
 
-  // Common Text Styles
+  // Text Styles
   static const TextStyle _baseTextStyle = TextStyle(fontSize: 14);
 
-  static final TextStyle bodyMediumLight =
-      _baseTextStyle.copyWith(color: lightTextPrimary);
-  static const TextStyle bodyLargeLight = TextStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.bold,
-    color: lightTextPrimary,
-  );
+  static final TextStyle bodyMediumLight = _baseTextStyle.copyWith(color: lightTextPrimary);
+  static const TextStyle bodyLargeLight = TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: lightTextPrimary);
+  
+  static final TextStyle bodyMediumDark = _baseTextStyle.copyWith(color: darkTextPrimary);
+  static const TextStyle bodyLargeDark = TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: darkTextPrimary);
 
-  static final TextStyle bodyMediumDark =
-      _baseTextStyle.copyWith(color: darkTextPrimary);
-  static const TextStyle bodyLargeDark = TextStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.bold,
-    color: darkTextPrimary,
-  );
+  static const TextStyle headingSmall = TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
+
+  static var errorColor;
 
   static var textPrimary;
 
-  // Public Getters (optional, can be removed if unused)
+  // Public Getters (optional)
   static Color get cardColor => lightSurface;
   static TextStyle get bodyMedium => bodyMediumLight;
 
@@ -97,11 +91,6 @@ class AppTheme {
       useMaterial3: true,
     );
   }
-  static TextStyle headingSmall = TextStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.bold,
-    color: textPrimary,
-  );
 
   // Dark Theme
   static ThemeData darkTheme() {

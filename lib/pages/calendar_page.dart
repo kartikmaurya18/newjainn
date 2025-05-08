@@ -7,7 +7,6 @@ import 'package:jain_tithi_fixed/services/tithi_service.dart';
 import 'package:jain_tithi_fixed/themes/app_theme.dart';
 import 'package:jain_tithi_fixed/utils/date_utils.dart' as date_util;
 import 'package:jain_tithi_fixed/widgets/location_widget.dart';
-import 'package:jain_tithi_fixed/widgets/tithi_day_tile.dart';
 import 'package:jain_tithi_fixed/pages/day_detail_page.dart';
 
 class CalendarPage extends StatefulWidget {
@@ -206,7 +205,7 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Calendar Legend', style: AppTheme.headingSmall),
+            const Text('Calendar Legend', style: AppTheme.headingSmall),
             const SizedBox(height: 12),
             _buildLegendItem(color: AppTheme.primaryColor, text: 'Selected Day'),
             _buildLegendItem(color: AppTheme.accentColor, text: 'Today'),

@@ -1,31 +1,60 @@
-// lib/models/tithi_details_model.dart
+// models/tithi_details_model.dart
 
 class TithiDetailsModel {
-  final String tithiName;
-  final String paksha;
   final int tithiNumber;
-  final bool isSpecial;
+  final String tithiName;
+  final String paksha; // Shukla (Bright) or Krishna (Dark)
+  final bool isSpecial; // For special tithis like Ashtami, Chaturdashi, etc.
 
-  TithiDetailsModel({
+  const TithiDetailsModel({
+    required this.tithiNumber,
     required this.tithiName,
     required this.paksha,
-    required this.tithiNumber,
-    required this.isSpecial,
+    this.isSpecial = false,
   });
 
-  // This is a placeholder logic; replace with actual calculation if needed
-  static TithiDetailsModel fromDate(DateTime date) {
-    final day = date.day;
-    final paksha = day <= 15 ? 'Shukla' : 'Krishna';
-    final tithiNumber = day <= 15 ? day : day - 15;
-    final tithiName = 'Tithi $tithiNumber';
-    final isSpecial = [5, 10, 15].contains(tithiNumber); // Example special logic
+  /// Tithi names in Sanskrit
+  static final List<String> tithiNames = [
+    'Pratipada',
+    'Dwitiya',
+    'Tritiya',
+    'Chaturthi',
+    'Panchami',
+    'Shashti',
+    'Saptami',
+    'Ashtami',
+    'Navami',
+    'Dashami',
+    'Ekadashi',
+    'Dwadashi',
+    'Trayodashi',
+    'Chaturdashi',
+    'Purnima/Amavasya',
+  ];
+
+  /// Factory method to create TithiDetails from a date (simplified logic)
+  factory TithiDetailsModel.fromDate(DateTime date) {
+    final int lunarDay = ((date.day + date.month) % 30) + 1;
+    final bool isShukla = lunarDay <= 15;
+    final int tithiNum = isShukla ? lunarDay : lunarDay - 15;
+
+    String tithiName = tithiNames[tithiNum - 1];
+    if (tithiNum == 15) {
+      tithiName = isShukla ? 'Purnima' : 'Amavasya';
+    }
+
+    final isSpecial = [8, 11, 14, 15].contains(tithiNum);
 
     return TithiDetailsModel(
+      tithiNumber: tithiNum,
       tithiName: tithiName,
-      paksha: paksha,
-      tithiNumber: tithiNumber,
+      paksha: isShukla ? 'Shukla' : 'Krishna',
       isSpecial: isSpecial,
     );
+  }
+
+  @override
+  String toString() {
+    return '$tithiName ($paksha Paksha)';
   }
 }
