@@ -4,16 +4,30 @@ class TithiDetailsModel {
   final int tithiNumber;
   final String tithiName;
   final String paksha; // Shukla (Bright) or Krishna (Dark)
-  final bool isSpecial; // For special tithis like Ashtami, Chaturdashi, etc.
+  final bool isSpecial;
+
+  final DateTime? sunrise;
+  final DateTime? sunset;
+  final DateTime? navkarshi;
+  final DateTime? sadhPorsi;
+  final DateTime? porsi;
+  final DateTime? purimaddha;
+  final DateTime? avaddha;
 
   const TithiDetailsModel({
     required this.tithiNumber,
     required this.tithiName,
     required this.paksha,
     this.isSpecial = false,
+    this.sunrise,
+    this.sunset,
+    this.navkarshi,
+    this.sadhPorsi,
+    this.porsi,
+    this.purimaddha,
+    this.avaddha,
   });
 
-  /// Tithi names in Sanskrit
   static final List<String> tithiNames = [
     'Pratipada',
     'Dwitiya',
@@ -32,7 +46,7 @@ class TithiDetailsModel {
     'Purnima/Amavasya',
   ];
 
-  /// Factory method to create TithiDetails from a date (simplified logic)
+  /// Factory method to create TithiDetailsModel from a date (basic logic)
   factory TithiDetailsModel.fromDate(DateTime date) {
     final int lunarDay = ((date.day + date.month) % 30) + 1;
     final bool isShukla = lunarDay <= 15;

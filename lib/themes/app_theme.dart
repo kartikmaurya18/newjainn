@@ -30,23 +30,28 @@ class AppTheme {
   static const Color ashubhColor = error;
 
   // Text Styles
-  static const TextStyle _baseTextStyle = TextStyle(fontSize: 14);
+  static const TextStyle headingSmall = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+  );
 
-  static final TextStyle bodyMediumLight = _baseTextStyle.copyWith(color: lightTextPrimary);
-  static const TextStyle bodyLargeLight = TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: lightTextPrimary);
-  
-  static final TextStyle bodyMediumDark = _baseTextStyle.copyWith(color: darkTextPrimary);
-  static const TextStyle bodyLargeDark = TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: darkTextPrimary);
+  static var bodyMedium;
 
-  static const TextStyle headingSmall = TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
+  // Public Getters (used dynamically)
+  static Color get textPrimary => lightTextPrimary;
+  static Color get errorColor => error;
 
-  static var errorColor;
-
-  static var textPrimary;
-
-  // Public Getters (optional)
   static Color get cardColor => lightSurface;
-  static TextStyle get bodyMedium => bodyMediumLight;
+
+  static TextStyle get bodyMediumLight =>
+      const TextStyle(fontSize: 14, color: lightTextPrimary);
+  static TextStyle get bodyLargeLight => const TextStyle(
+      fontSize: 16, fontWeight: FontWeight.bold, color: lightTextPrimary);
+
+  static TextStyle get bodyMediumDark =>
+      const TextStyle(fontSize: 14, color: darkTextPrimary);
+  static TextStyle get bodyLargeDark => const TextStyle(
+      fontSize: 16, fontWeight: FontWeight.bold, color: darkTextPrimary);
 
   // Light Theme
   static ThemeData lightTheme() {
@@ -69,7 +74,7 @@ class AppTheme {
         color: lightSurface,
         elevation: 2,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.all(Radius.circular(12)),
         ),
         shadowColor: Colors.black.withOpacity(0.1),
       ),
@@ -113,7 +118,7 @@ class AppTheme {
         color: darkSurface,
         elevation: 2,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.all(Radius.circular(12)),
         ),
         shadowColor: Colors.black.withOpacity(0.3),
       ),

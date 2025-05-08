@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jain_tithi_fixed/widgets/tithi_day_cell.dart';
 import 'package:table_calendar/table_calendar.dart';
 // In calendar_page.dart
 
@@ -187,12 +188,12 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
       orElse: () => MapEntry(day, TithiModel.empty()),
     ).value;
 
-    return TithiDayTile(
+    return TithiDayCell(
       date: day,
       tithi: tithi,
       isSelected: isSelected,
       isToday: isToday,
-      onTap: () => _onDaySelected(day, focusedDay),
+      onTap: () => _onDaySelected(day, focusedDay), tithiModel: null,
     );
   }
 

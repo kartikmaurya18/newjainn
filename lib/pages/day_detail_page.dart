@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:jain_tithi_fixed/models/tithi_details_model.dart';
 import 'package:jain_tithi_fixed/models/tithi_model.dart';
-import 'package:jain_tithi_fixed/models/timming_model.dart';
 import 'package:jain_tithi_fixed/services/tithi_service.dart';
 import 'package:jain_tithi_fixed/themes/app_theme.dart';
 import 'package:jain_tithi_fixed/utils/date_utils.dart';

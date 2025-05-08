@@ -10,7 +10,7 @@ class TithiDayCell extends StatelessWidget {
     super.key,
     required this.date,
     required this.isSelected,
-    required this.tithiModel,
+    required this.tithiModel, required TithiModel tithi, required bool isToday, required void Function() onTap,
   });
 
   @override

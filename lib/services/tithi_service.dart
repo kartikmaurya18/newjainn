@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jain_tithi_fixed/models/tithi_model.dart';
 import 'package:jain_tithi_fixed/models/tithi_details_model.dart';
-import 'package:jain_tithi_fixed/models/timming_model.dart'; // Make sure this import exists
 import 'package:jain_tithi_fixed/services/location_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
