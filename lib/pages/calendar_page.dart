@@ -185,7 +185,7 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
   Widget _buildDayTile(BuildContext context, DateTime day, DateTime focusedDay, {bool isSelected = false, bool isToday = false}) {
     final tithi = _tithis.entries.firstWhere(
       (entry) => date_util.DateUtil.isSameDay(entry.key, day),
-      orElse: () => MapEntry(day, TithiModel.empty()),
+      orElse: () => MapEntry(day, TithiModel.empty(day)),
     ).value;
 
     return TithiDayCell(
@@ -237,26 +237,37 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildLegendItem({required Color color, Color? borderColor, required String text, Color textColor = AppTheme.textPrimary}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
-      child: Row(
-        children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              border: borderColor != null ? Border.all(color: borderColor, width: 1) : null,
-            ),
+Widget _buildLegendItem({
+  required Color color,
+  Color? borderColor,
+  required String text,
+  Color? textColor,
+}) {
+  final effectiveTextColor = textColor ?? AppTheme.lightTextPrimary;
+
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6.0),
+    child: Row(
+      children: [
+        Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: borderColor != null ? Border.all(color: borderColor, width: 1) : null,
           ),
-          const SizedBox(width: 12),
-          Text(text, style: AppTheme.bodyMedium.copyWith(color: textColor)),
-        ],
-      ),
-    );
-  }
+        ),
+        const SizedBox(width: 12),
+        Text(
+          text,
+          style: AppTheme.bodyMedium.copyWith(color: effectiveTextColor),
+        ),
+      ],
+    ),
+  );
+}
+
 
   void _showInfoDialog() {
     showDialog(

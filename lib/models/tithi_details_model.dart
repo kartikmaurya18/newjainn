@@ -1,5 +1,3 @@
-// models/tithi_details_model.dart
-
 class TithiDetailsModel {
   final int tithiNumber;
   final String tithiName;
@@ -64,6 +62,33 @@ class TithiDetailsModel {
       tithiName: tithiName,
       paksha: isShukla ? 'Shukla' : 'Krishna',
       isSpecial: isSpecial,
+    );
+  }
+
+  /// Utility method to calculate ritual timings
+  static TithiDetailsModel calculate(DateTime sunrise, DateTime sunset, tithi, {
+    required int tithiNumber,
+    required String tithiName,
+    required String paksha,
+    bool isSpecial = false,
+  
+  }) {
+    final prahar = Duration(
+      milliseconds: ((sunset.difference(sunrise).inMilliseconds) / 4).round(),
+    );
+
+    return TithiDetailsModel(
+      tithiNumber: tithiNumber,
+      tithiName: tithiName,
+      paksha: paksha,
+      isSpecial: isSpecial,
+      sunrise: sunrise,
+      sunset: sunset,
+      navkarshi: sunrise.add(const Duration(minutes: 48)),
+      porsi: sunrise.add(prahar),
+      sadhPorsi: sunrise.add(prahar * 1.5),
+      purimaddha: sunrise.add(prahar * 2),
+      avaddha: sunrise.add(prahar * 3),
     );
   }
 
