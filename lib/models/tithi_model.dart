@@ -1,5 +1,3 @@
-// models/tithi_model.dart
-
 class TithiModel {
   final String tithiName;
   final bool isSpecial;
@@ -12,8 +10,6 @@ class TithiModel {
   final String? month;
   final String? year;
 
-  final dynamic tithi; // Use 'final' and define a proper type if you know it
-
   TithiModel({
     required this.tithiName,
     required this.isSpecial,
@@ -25,7 +21,6 @@ class TithiModel {
     required this.sunset,
     this.month,
     this.year,
-    this.tithi,
   });
 
   factory TithiModel.fromJson(Map<String, dynamic> json) {
@@ -40,7 +35,6 @@ class TithiModel {
       sunset: DateTime.parse(json['sunset']),
       month: json['month'],
       year: json['year'],
-      tithi: json['tithi'], // keep dynamic unless you know the expected type
     );
   }
 
@@ -56,7 +50,6 @@ class TithiModel {
       'sunset': sunset.toIso8601String(),
       'month': month,
       'year': year,
-      'tithi': tithi,
     };
   }
 
@@ -72,7 +65,6 @@ class TithiModel {
       sunset: date.add(const Duration(hours: 18)),
       month: null,
       year: null,
-      tithi: null,
     );
   }
 }

@@ -24,36 +24,46 @@ class AppTheme {
   static const Color warning = Color(0xFFFF9800);
   static const Color info = Color(0xFF2196F3);
 
-  // Calendar Colors
-  static const Color todayHighlight = primaryColor;
-  static const Color shubhColor = success;
-  static const Color ashubhColor = error;
-
   // Text Styles
   static const TextStyle headingSmall = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.bold,
   );
 
-  static var errorColor;
-
   static var bodyMedium;
 
-  static var cardColor;
+  // Public Getters (used dynamically)
+  static Color get textPrimary => lightTextPrimary;
+  static Color get errorColor => error;
 
-  // Light Theme Text Styles
+  static Color get cardColor => lightSurface;
+
   static TextStyle get bodyMediumLight =>
       const TextStyle(fontSize: 14, color: lightTextPrimary);
   static TextStyle get bodyLargeLight => const TextStyle(
       fontSize: 16, fontWeight: FontWeight.bold, color: lightTextPrimary);
 
-  // Dark Theme Text Styles
-  static TextStyle get bodyMediumDark =>
-      const TextStyle(fontSize: 14, color: darkTextPrimary);
-  static TextStyle get bodyLargeDark => const TextStyle(
-      fontSize: 16, fontWeight: FontWeight.bold, color: darkTextPrimary);
+  // Helper Methods for Theme Customization
 
-  // Common Elevated Button Style
+  static AppBarTheme _appBarTheme(Color primaryColor) {
+    return AppBarTheme(
+      color: primaryColor,
+      elevation: 0,
+      iconTheme: const IconThemeData(color: Colors.white),
+    );
+  }
+
+  static CardTheme _cardTheme(Color surfaceColor) {
+    return CardTheme(
+      color: surfaceColor,
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+      ),
+      shadowColor: Colors.black.withOpacity(0.1),
+    );
+  }
+
   static ElevatedButtonThemeData _elevatedButtonTheme() {
     return ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -65,28 +75,6 @@ class AppTheme {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
-    );
-  }
-
-  // Common Card Theme Style
-  static CardTheme _cardTheme(Color surfaceColor) {
-    return CardTheme(
-      color: surfaceColor,
-      elevation: 2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(12)),
-      ),
-      // ignore: deprecated_member_use
-      shadowColor: Colors.black.withOpacity(0.1),
-    );
-  }
-
-  // Common AppBar Theme
-  static AppBarTheme _appBarTheme(Color color) {
-    return AppBarTheme(
-      color: color,
-      elevation: 0,
-      iconTheme: const IconThemeData(color: Colors.white),
     );
   }
 
@@ -106,28 +94,6 @@ class AppTheme {
       textTheme: TextTheme(
         bodyLarge: bodyLargeLight,
         bodyMedium: bodyMediumLight,
-      ),
-      elevatedButtonTheme: _elevatedButtonTheme(),
-      useMaterial3: true,
-    );
-  }
-
-  // Dark Theme
-  static ThemeData darkTheme() {
-    return ThemeData(
-      brightness: Brightness.dark,
-      colorScheme: const ColorScheme.dark(
-        primary: primaryColor,
-        secondary: secondaryColor,
-        surface: darkSurface,
-        error: error,
-      ),
-      scaffoldBackgroundColor: darkBackground,
-      appBarTheme: _appBarTheme(const Color(0xFF2C2C2C)), // Darker AppBar color
-      cardTheme: _cardTheme(darkSurface),
-      textTheme: TextTheme(
-        bodyLarge: bodyLargeDark,
-        bodyMedium: bodyMediumDark,
       ),
       elevatedButtonTheme: _elevatedButtonTheme(),
       useMaterial3: true,

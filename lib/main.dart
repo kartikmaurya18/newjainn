@@ -14,7 +14,7 @@ class JainCalendarApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Jain Tithi Calendar',
-      theme: AppTheme.lightTheme(), // FIXED: Call the function
+      theme: AppTheme.lightTheme(),
       debugShowCheckedModeBanner: false,
       home: const CalendarPage(),
     );

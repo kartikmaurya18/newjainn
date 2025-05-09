@@ -6,12 +6,12 @@ class LocationWidget extends StatefulWidget {
   final Function(Map<String, dynamic>)? onLocationChanged;
 
   const LocationWidget({
-    super.key,
+    Key? key,
     this.onLocationChanged,
-  });
+  }) : super(key: key);
 
   @override
-  State<LocationWidget> createState() => _LocationWidgetState();
+  _LocationWidgetState createState() => _LocationWidgetState();
 }
 
 class _LocationWidgetState extends State<LocationWidget> {
@@ -33,7 +33,7 @@ class _LocationWidgetState extends State<LocationWidget> {
     try {
       Map<String, dynamic>? location = await _locationService.getCachedLocation();
 
-      // If no cached location, fetch current location
+      // If no cached location, fetch the current location
       location ??= await _locationService.getCurrentLocation();
 
       final city = location['city'] ?? 'Unknown location';
@@ -43,6 +43,7 @@ class _LocationWidgetState extends State<LocationWidget> {
         _isLoading = false;
       });
 
+      // Notify listener of location change
       widget.onLocationChanged?.call(location);
     } catch (e) {
       debugPrint('Error fetching location: $e');
@@ -62,7 +63,6 @@ class _LocationWidgetState extends State<LocationWidget> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            // ignore: deprecated_member_use
             color: Colors.black.withOpacity(0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
