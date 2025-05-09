@@ -30,7 +30,6 @@ class AppTheme {
     fontWeight: FontWeight.bold,
   );
 
-  // ignore: prefer_typing_uninitialized_variables
   static var bodyMedium;
 
   // Public Getters (used dynamically)
@@ -58,10 +57,9 @@ class AppTheme {
     return CardTheme(
       color: surfaceColor,
       elevation: 2,
-      shape: const RoundedRectangleBorder(
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(12)),
       ),
-      // ignore: deprecated_member_use
       shadowColor: Colors.black.withOpacity(0.1),
     );
   }
