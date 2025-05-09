@@ -6,9 +6,9 @@ class LocationWidget extends StatefulWidget {
   final Function(Map<String, dynamic>)? onLocationChanged;
 
   const LocationWidget({
-    Key? key,
+    super.key,
     this.onLocationChanged,
-  }) : super(key: key);
+  });
 
   @override
   // ignore: library_private_types_in_public_api
