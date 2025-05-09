@@ -212,6 +212,7 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
             _buildLegendItem(color: AppTheme.accentColor, text: 'Today'),
             _buildLegendItem(color: Colors.white, borderColor: Colors.black26, text: 'Purnima (Full Moon)'),
             _buildLegendItem(color: Colors.black87, text: 'Amavasya (New Moon)', textColor: Colors.white),
+            // ignore: deprecated_member_use
             _buildLegendItem(color: AppTheme.secondaryColor.withOpacity(0.3), text: 'Special Tithi (Ashtami, Ekadashi, etc.)'),
           ],
         ),

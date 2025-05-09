@@ -141,6 +141,7 @@ class _DayDetailPageState extends State<DayDetailPage> with SingleTickerProvider
                   height: 150,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
+                    // ignore: deprecated_member_use
                     color: Colors.white.withOpacity(0.1),
                   ),
                 ),
