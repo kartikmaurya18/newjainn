@@ -3,7 +3,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:csv/csv.dart';
 import '../models/tithi_model.dart';
 import '../models/tithi_details_model.dart';
-import 'sun_calculator.dart'; // custom util you'll create
+import '../utils/sun_calculator.dart'; // custom util you'll create
 
 class CsvParserService {
   Future<List<TithiDay>> loadTithiData() async {
