@@ -6,11 +6,12 @@ class LocationWidget extends StatefulWidget {
   final Function(Map<String, dynamic>)? onLocationChanged;
 
   const LocationWidget({
-    Key? key,
+    super.key,
     this.onLocationChanged,
-  }) : super(key: key);
+  });
 
   @override
+  // ignore: library_private_types_in_public_api
   _LocationWidgetState createState() => _LocationWidgetState();
 }
 
@@ -63,6 +64,7 @@ class _LocationWidgetState extends State<LocationWidget> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
+            // ignore: deprecated_member_use
             color: Colors.black.withOpacity(0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
