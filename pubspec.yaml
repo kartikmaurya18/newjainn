@@ -9,6 +9,8 @@
   dependencies:
     flutter:
       sdk: flutter
+    sunrise_sunset_calculator: ^1.0.1
+    latlong2: ^0.8.1
     cupertino_icons: ^1.0.6
     geocoding: ^2.1.1
     geolocator: ^10.1.0

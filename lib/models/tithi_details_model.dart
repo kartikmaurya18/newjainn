@@ -1,7 +1,7 @@
 class TithiDetailsModel {
   final int tithiNumber;
   final String tithiName;
-  final String paksha; // Shukla (Bright) or Krishna (Dark)
+  final String paksha; // Shukla or Krishna
   final bool isSpecial;
 
   final DateTime? sunrise;
@@ -44,7 +44,7 @@ class TithiDetailsModel {
     'Purnima/Amavasya',
   ];
 
-  /// Factory method to create TithiDetailsModel from a date (basic logic)
+  /// Factory method to estimate tithi from date only
   factory TithiDetailsModel.fromDate(DateTime date) {
     final int lunarDay = ((date.day + date.month) % 30) + 1;
     final bool isShukla = lunarDay <= 15;
@@ -65,13 +65,14 @@ class TithiDetailsModel {
     );
   }
 
-  /// Utility method to calculate ritual timings
-  static TithiDetailsModel calculate(DateTime sunrise, DateTime sunset, tithi, {
+  /// Calculates all ritual times using sunrise and sunset
+  static TithiDetailsModel calculate({
+    required DateTime sunrise,
+    required DateTime sunset,
     required int tithiNumber,
     required String tithiName,
     required String paksha,
     bool isSpecial = false,
-  
   }) {
     final prahar = Duration(
       milliseconds: ((sunset.difference(sunrise).inMilliseconds) / 4).round(),
@@ -86,14 +87,12 @@ class TithiDetailsModel {
       sunset: sunset,
       navkarshi: sunrise.add(const Duration(minutes: 48)),
       porsi: sunrise.add(prahar),
-      sadhPorsi: sunrise.add(prahar * 1.5),
+      sadhPorsi: sunrise.add(prahar ~/ 2),
       purimaddha: sunrise.add(prahar * 2),
       avaddha: sunrise.add(prahar * 3),
     );
   }
 
   @override
-  String toString() {
-    return '$tithiName ($paksha Paksha)';
-  }
+  String toString() => '$tithiName ($paksha Paksha)';
 }
