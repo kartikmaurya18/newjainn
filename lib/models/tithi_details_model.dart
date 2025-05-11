@@ -44,7 +44,6 @@ class TithiDetailsModel {
     'Purnima/Amavasya',
   ];
 
-  /// Factory method to estimate tithi from date only
   factory TithiDetailsModel.fromDate(DateTime date) {
     final int lunarDay = ((date.day + date.month) % 30) + 1;
     final bool isShukla = lunarDay <= 15;
