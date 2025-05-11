@@ -1,7 +1,7 @@
 class TithiDetailsModel {
   final int tithiNumber;
   final String tithiName;
-  final String paksha; 
+  final String paksha; // Shukla or Krishna
   final bool isSpecial;
 
   final DateTime? sunrise;
@@ -44,6 +44,7 @@ class TithiDetailsModel {
     'Purnima/Amavasya',
   ];
 
+  /// Factory method to estimate tithi from date only
   factory TithiDetailsModel.fromDate(DateTime date) {
     final int lunarDay = ((date.day + date.month) % 30) + 1;
     final bool isShukla = lunarDay <= 15;
@@ -64,6 +65,7 @@ class TithiDetailsModel {
     );
   }
 
+  /// Calculates all ritual times using sunrise and sunset
   static TithiDetailsModel calculate({
     required DateTime sunrise,
     required DateTime sunset,
