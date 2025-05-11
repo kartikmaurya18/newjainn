@@ -64,7 +64,6 @@ class TithiDetailsModel {
     );
   }
 
-  /// Calculates all ritual times using sunrise and sunset
   static TithiDetailsModel calculate({
     required DateTime sunrise,
     required DateTime sunset,
