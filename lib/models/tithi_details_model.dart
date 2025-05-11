@@ -1,7 +1,7 @@
 class TithiDetailsModel {
   final int tithiNumber;
   final String tithiName;
-  final String paksha; // Shukla or Krishna
+  final String paksha; 
   final bool isSpecial;
 
   final DateTime? sunrise;
