@@ -11,7 +11,7 @@ import 'package:jain_tithi_fixed/utils/sun_calculator.dart'; // custom util you'
 class CsvParserService {
   Future<List<TithiDay>> loadTithiData() async {
     final csvString = await rootBundle.loadString('assets/data/tithi_data.csv');
-    final List<List<dynamic>> csvData = CsvToListConverter().convert(csvString, eol: '\n');
+    final List<List<dynamic>> csvData = const CsvToListConverter().convert(csvString, eol: '\n');
 
     // Assuming headers in row 0
     final headers = csvData[0].map((e) => e.toString()).toList();
@@ -46,4 +46,7 @@ class CsvParserService {
       );
     }).toList();
   }
+}
+
+class TithiDay {
 }
