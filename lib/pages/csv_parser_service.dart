@@ -1,9 +1,12 @@
+// ignore: unused_import
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:csv/csv.dart';
+// ignore: unused_import
 import '../models/tithi_model.dart';
+// ignore: unused_import
 import '../models/tithi_details_model.dart';
-import 'sun_calculator.dart'; // custom util you'll create
+import 'package:jain_tithi_fixed/utils/sun_calculator.dart'; // custom util you'll create
 
 class CsvParserService {
   Future<List<TithiDay>> loadTithiData() async {
