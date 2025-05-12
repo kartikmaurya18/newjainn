@@ -20,9 +20,9 @@ class CsvParserService {
     return dataRows.map((row) {
       final map = Map.fromIterables(headers, row.map((e) => e.toString()));
 
-      final date = DateTime.parse(map['date']);
-      final lat = double.parse(map['latitude']);
-      final lng = double.parse(map['longitude']);
+      final date = DateTime.parse(map['date']!);
+      final lat = double.parse(map['latitude']!);
+      final lng = double.parse(map['longitude']!);
 
       final sunrise = map['sunrise'] != ''
           ? DateTime.parse('${map['date']} ${map['sunrise']}')
@@ -33,7 +33,7 @@ class CsvParserService {
           : SunCalculator.getSunset(lat, lng, date);
 
       return TithiDay(
-        date: date,
+        this.date: date,
         tithiName: map['tithiName'],
         paksha: map['paksha'],
         month: map['month'],
