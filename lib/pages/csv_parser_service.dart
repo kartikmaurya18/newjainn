@@ -48,5 +48,8 @@ class CsvParserService {
   }
 }
 
+class TithiDetails {
+}
+
 class TithiDay {
 }
